@@ -57,7 +57,14 @@ body{font-family:'Jost',sans-serif;font-weight:300;background:var(--bg);color:va
   background:#111;touch-action:none;cursor:grab;
 }
 .fv-img-wrap:active{cursor:grabbing}
-.fv-img-wrap img{width:100%;height:auto;display:block;transform-origin:center center;user-select:none;-webkit-user-select:none}
+.fv-img-wrap img{
+  /* Natural size — transform handles everything.
+     No width/height constraints so zoom can go
+     smaller than the window or larger freely.    */
+  width:auto;height:auto;max-width:none;max-height:none;
+  display:block;transform-origin:center center;
+  user-select:none;-webkit-user-select:none;
+}
 .fv-cap{flex-shrink:0;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.9rem;color:rgba(255,255,255,.45);text-align:center;padding:.4rem 1rem .5rem}
 .fv-hint{font-size:.65rem;color:rgba(255,255,255,.22);text-align:center;padding:0 1rem .6rem;flex-shrink:0}
 @media(orientation:landscape) and (max-height:500px){
@@ -262,7 +269,8 @@ function renderFv(){
 }
 function fvNav(dir){
   fvIdx=Math.max(0,Math.min(fvIdx+dir,fvGroup.length-1));
-  renderFv(); resetZoom();
+  renderFv();
+  /* zoom resets automatically via the img load event */
 }
 document.getElementById('fv-close-btn').addEventListener('click',function(){
   document.querySelector('meta[name="viewport"]').content='width=device-width,initial-scale=1.0';
@@ -274,8 +282,32 @@ var sc=1,tx=0,ty=0,pts={};
 var initDist=0,initSc=1,initPX=0,initPY=0,initTX=0,initTY=0,lastTap=0;
 var wrap=document.getElementById('fv-img-wrap');
 var zImg=document.getElementById('fv-img');
-function zRender(){zImg.style.transform='scale('+sc+') translate('+tx+'px,'+ty+'px)';}
-function resetZoom(){sc=1;tx=0;ty=0;zRender();}
+var fitSc=1; /* scale that makes image fill viewport width */
+
+function calcFit(){
+  /* Use wrap width so image starts exactly viewport-wide */
+  if(zImg.naturalWidth > 0){
+    fitSc = wrap.clientWidth / zImg.naturalWidth;
+  } else {
+    fitSc = 1;
+  }
+}
+
+function zRender(){
+  zImg.style.transform='scale('+sc+') translate('+tx+'px,'+ty+'px)';
+}
+
+function resetZoom(){
+  calcFit();
+  sc=fitSc; tx=0; ty=0; zRender();
+}
+
+/* Recalculate fit when a new image loads */
+zImg.addEventListener('load', function(){
+  calcFit();
+  sc=fitSc; tx=0; ty=0; zRender();
+});
+
 function plist(){return Object.values(pts);}
 
 wrap.addEventListener('pointerdown',function(e){
@@ -299,8 +331,10 @@ wrap.addEventListener('pointermove',function(e){
   var pl=plist();
   if(pl.length>=2){
     var d=Math.hypot(pl[1].clientX-pl[0].clientX,pl[1].clientY-pl[0].clientY);
-    sc=Math.min(Math.max(initSc*d/initDist,0.2),5);zRender();
-  } else if(sc!==1){
+    /* No min/max clamp — zoom freely */
+    sc=initSc*d/initDist;
+    zRender();
+  } else if(sc!==fitSc){
     tx=initTX+(e.clientX-initPX)/sc;
     ty=initTY+(e.clientY-initPY)/sc;
     zRender();
@@ -309,20 +343,25 @@ wrap.addEventListener('pointermove',function(e){
 wrap.addEventListener('pointerup',function(e){
   delete pts[e.pointerId];
   var pl=plist();
-  if(pl.length===0&&sc>0.85&&sc<1.15){sc=1;tx=0;ty=0;zRender();}
+  /* Snap back to fit only if very close to it */
+  if(pl.length===0 && Math.abs(sc-fitSc)<fitSc*0.12){
+    sc=fitSc; tx=0; ty=0; zRender();
+  }
   if(pl.length===1){initPX=pl[0].clientX;initPY=pl[0].clientY;initTX=tx;initTY=ty;}
 });
 wrap.addEventListener('pointercancel',function(e){delete pts[e.pointerId];});
+
 wrap.addEventListener('wheel',function(e){
   e.preventDefault();
   var r=wrap.getBoundingClientRect();
   var cx=e.clientX-r.left-r.width/2, cy=e.clientY-r.top-r.height/2;
   var delta=e.deltaY>0?0.9:1.1;
-  var ns=Math.min(Math.max(sc*delta,0.2),5);
+  var ns=sc*delta; /* no clamp — zoom freely */
   tx=cx/ns-cx/sc+tx*(sc/ns)*(ns/sc);
   ty=cy/ns-cy/sc+ty*(sc/ns)*(ns/sc);
   sc=ns;
-  if(sc>0.85&&sc<1.15){sc=1;tx=0;ty=0;}
+  /* Snap to fit if very close */
+  if(Math.abs(sc-fitSc)<fitSc*0.05){sc=fitSc;tx=0;ty=0;}
   zRender();
 },{passive:false});
 
