@@ -8,8 +8,9 @@
       "name": "sketches",
       "subs": {
         "sub01": "#1",
-        "sub02": "nummer 2",
-        "sub03": "en 3"
+        "sub02": "#2",
+        "sub03": "#3",
+		"sub04": "#4"
       }
     },
     "fldr02": {
