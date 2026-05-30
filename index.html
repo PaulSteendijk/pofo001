@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Art Portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f5f0;--ink:#1a1a18;--muted:#8a8880;
+  --accent:#c8a96e;--white:#fff;--border:rgba(26,26,24,.13);
+  --pad:2.5rem;
+}
+@media(max-width:600px){:root{--pad:1rem}}
+body{font-family:'Jost',sans-serif;font-weight:300;background:var(--bg);color:var(--ink);min-height:100vh}
+
+/* ── Local file warning ── */
+#local-warn{
+  display:none;
+  background:#7a3b1e;color:#fff;
+  padding:1rem var(--pad);font-size:.82rem;line-height:1.7;
+}
+#local-warn.show{display:block}
+#local-warn strong{font-weight:400;text-decoration:underline}
+
+/* ── Lightbox radios ── */
+#r-none,#r-open{position:fixed;top:-999px;left:-999px;opacity:0;width:0;height:0}
+#r-open:checked~#fv-panel {display:flex}
+#r-open:checked~#local-warn{display:none!important}
+#r-open:checked~header     {display:none!important}
+#r-open:checked~.nav-wrap  {display:none!important}
+#r-open:checked~.divider2  {display:none!important}
+#r-open:checked~#pages     {display:none!important}
+
+/* ── Full-view panel ── */
+#fv-panel{
+  display:none;flex-direction:column;
+  height:100vh;height:100dvh;width:100vw;width:100dvw;
+  overflow:hidden;background:#111;color:#fff;
+}
+.fv-bar{display:flex;align-items:center;justify-content:space-between;padding:.7rem 1rem;background:rgba(0,0,0,.5);flex-shrink:0;gap:.5rem}
+.fv-close,.fv-arr{
+  display:flex;align-items:center;justify-content:center;
+  min-width:44px;min-height:44px;color:rgba(255,255,255,.75);
+  font-size:1.6rem;line-height:1;cursor:pointer;border-radius:50%;
+  transition:background .15s;background:none;border:none;
+  -webkit-tap-highlight-color:rgba(255,255,255,.1);
+}
+.fv-close:hover,.fv-arr:hover{background:rgba(255,255,255,.15);color:#fff}
+.fv-arr.off{visibility:hidden;pointer-events:none}
+.fv-counter{font-family:'Jost',sans-serif;font-size:.72rem;color:rgba(255,255,255,.4);letter-spacing:.08em}
+.fv-nav{display:flex;gap:.25rem}
+.fv-img-wrap{
+  flex:1;min-height:0;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  background:#111;touch-action:none;cursor:grab;
+}
+.fv-img-wrap:active{cursor:grabbing}
+.fv-img-wrap img{width:100%;height:auto;display:block;transform-origin:center center;user-select:none;-webkit-user-select:none}
+.fv-cap{flex-shrink:0;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.9rem;color:rgba(255,255,255,.45);text-align:center;padding:.4rem 1rem .5rem}
+.fv-hint{font-size:.65rem;color:rgba(255,255,255,.22);text-align:center;padding:0 1rem .6rem;flex-shrink:0}
+@media(orientation:landscape) and (max-height:500px){
+  .fv-bar{padding:.3rem .75rem}
+  .fv-close,.fv-arr{min-height:36px;min-width:36px;font-size:1.3rem}
+  .fv-cap,.fv-hint{display:none}
+}
+
+/* ── Header / primary nav ── */
+header{padding:2.5rem var(--pad) 0;display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.site-name{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:2rem;letter-spacing:.04em;color:var(--ink);cursor:pointer}
+.site-name em{font-style:italic;color:var(--accent)}
+#primary-nav{display:flex;gap:.15rem;flex-wrap:wrap}
+.pnav-btn{
+  font-family:'Jost',sans-serif;font-weight:300;font-size:.78rem;
+  letter-spacing:.12em;text-transform:uppercase;background:none;border:none;
+  color:var(--muted);cursor:pointer;padding:.45rem .85rem;border-radius:2px;
+  transition:color .2s;position:relative;touch-action:manipulation;
+}
+.pnav-btn::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:0;height:1px;background:var(--accent);transition:width .25s}
+.pnav-btn.active{color:var(--ink)}
+.pnav-btn.active::after,.pnav-btn:hover::after{width:55%}
+.pnav-btn:hover{color:var(--ink)}
+
+/* ── Secondary nav (subitems) ── */
+.nav-wrap{background:var(--bg)}
+.divider1{margin:.9rem var(--pad) 0;height:1px;background:var(--border)}
+#secondary-nav{
+  display:flex;flex-wrap:wrap;gap:.1rem;
+  padding:.4rem var(--pad) 0;
+  min-height:2rem;
+}
+#secondary-nav.hidden{visibility:hidden}
+.snav-btn{
+  font-family:'Jost',sans-serif;font-weight:300;font-size:.72rem;
+  letter-spacing:.1em;text-transform:uppercase;background:none;border:none;
+  color:var(--muted);cursor:pointer;padding:.3rem .75rem;border-radius:2px;
+  transition:color .2s;position:relative;touch-action:manipulation;
+}
+.snav-btn::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:0;height:1px;background:var(--accent);transition:width .25s}
+.snav-btn.active{color:var(--ink)}
+.snav-btn.active::after,.snav-btn:hover::after{width:55%}
+.snav-btn:hover{color:var(--ink)}
+.divider2{margin:.9rem var(--pad) 0;height:1px;background:var(--border)}
+
+/* ── Content pages ── */
+#pages{padding:2rem var(--pad) 4rem}
+.page{display:none}
+.page.active{display:block}
+
+/* ── Photo grid ── */
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:.5rem}
+@media(max-width:500px){.photo-grid{grid-template-columns:repeat(2,1fr);gap:6px}}
+.grid-lbl{display:block;cursor:pointer;background:var(--white);border:1px solid var(--border);transition:box-shadow .2s;-webkit-tap-highlight-color:rgba(200,169,110,.2)}
+.grid-lbl:hover{box-shadow:0 3px 14px rgba(0,0,0,.1)}
+.grid-img{aspect-ratio:1;overflow:hidden}
+.grid-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s}
+.grid-lbl:hover .grid-img img{transform:scale(1.05)}
+.grid-info{padding:6px 8px 8px;border-top:1px solid var(--border)}
+.grid-title{font-size:.75rem;letter-spacing:.03em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── Loading / status ── */
+.loading{padding:1.5rem 0;font-size:.82rem;color:var(--muted);letter-spacing:.05em}
+.err-msg{padding:1rem 0;font-size:.8rem;color:#c0392b;line-height:1.7}
+.err-msg a{color:var(--accent)}
+.empty-msg{padding:1rem 0;font-size:.8rem;color:var(--muted);font-style:italic}
+
+/* ── About ── */
+.about-wrap{max-width:560px;padding-top:.5rem}
+.about-wrap h2{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:2.2rem;line-height:1.2;margin-bottom:1.5rem}
+.about-wrap p{font-size:.92rem;line-height:1.85;color:#444;margin-bottom:1rem}
+.contact-link{display:inline-block;margin-top:1rem;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--accent);padding-bottom:2px}
+</style>
+</head>
+<body>
+
+<input type="radio" name="fv" id="r-none" checked>
+<input type="radio" name="fv" id="r-open">
+
+<!-- Lightbox panel -->
+<div id="fv-panel">
+  <div class="fv-bar">
+    <label class="fv-close" for="r-none" id="fv-close-btn">×</label>
+    <span class="fv-counter" id="fv-counter"></span>
+    <div class="fv-nav">
+      <button class="fv-arr off" id="fv-prev" onclick="fvNav(-1)">&#8249;</button>
+      <button class="fv-arr off" id="fv-next" onclick="fvNav(1)">&#8250;</button>
+    </div>
+  </div>
+  <div class="fv-img-wrap" id="fv-img-wrap">
+    <img id="fv-img" src="" alt="">
+  </div>
+  <p class="fv-cap" id="fv-cap"></p>
+  <p class="fv-hint">Pinch / scroll to zoom &nbsp;·&nbsp; drag to pan &nbsp;·&nbsp; double-tap resets</p>
+</div>
+
+<!-- Local file warning -->
+<div id="local-warn">
+  <strong>⚠ Open this page via GitHub Pages, not as a local file.</strong><br>
+  Browsers block network requests from local files, so images cannot load.<br>
+  Your URL should start with <code>https://</code> — for example
+  <code>https://paulsteendijk.github.io/pofo001/</code><br>
+  See the README in your repository for how to enable GitHub Pages.
+</div>
+
+<!-- Header with primary nav -->
+<header>
+  <span class="site-name" id="site-name-el">&#8203;</span>
+  <nav id="primary-nav"></nav>
+</header>
+
+<div class="nav-wrap">
+  <div class="divider1"></div>
+  <nav id="secondary-nav" class="hidden"></nav>
+</div>
+<div class="divider2"></div>
+
+<!-- Content pages injected here -->
+<div id="pages"></div>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   ONLY THESE TWO LINES NEED EDITING
+   ════════════════════════════════════════════════════════════ */
+var GITHUB_USER = 'PaulSteendijk';
+var GITHUB_REPO = 'pofo001';
+/* ════════════════════════════════════════════════════════════
+   Everything else is driven by config.json in your repo root.
+
+   config.json format (create this file in your repo):
+   {
+     "site_first": "Paul",
+     "site_last":  "Steendijk",
+     "about":      "Write about yourself here.",
+     "email":      "you@example.com",
+     "menu": {
+       "fldr01": {
+         "name": "Paintings",
+         "subs": { "sub01": "2024", "sub02": "2023", "sub03": "2022" }
+       },
+       "fldr02": {
+         "name": "Drawings",
+         "subs": { "sub01": "Pencil", "sub02": "Charcoal" }
+       },
+       "fldr03": {
+         "name": "Photography",
+         "subs": { "sub01": "Landscapes", "sub02": "Portraits" }
+       }
+     }
+   }
+
+   Rules:
+   • Only fldr01–fldr09 and sub01–sub09 are checked.
+   • A menu item only appears if its folder exists in the repo.
+   • Images load when you first click a subitem (lazy).
+   • Filename prefix "001_" etc. sets display order; prefix is
+     stripped from the displayed title.
+   ════════════════════════════════════════════════════════════ */
+
+var IMG_EXT = /\.(jpg|jpeg|png|gif|webp|avif)$/i;
+var BASE_RAW = 'https://raw.githubusercontent.com/'+GITHUB_USER+'/'+GITHUB_REPO+'/main/';
+var BASE_API = 'https://api.github.com/repos/'+GITHUB_USER+'/'+GITHUB_REPO+'/contents/';
+
+/* Image data cache: pageId → [{src,cap}] */
+var IMG_CACHE = {};
+/* Track which pages have been loaded */
+var LOADED = {};
+
+/* Active state */
+var activeFldr = null;
+var activeSub  = null;
+
+/* Config loaded from GitHub */
+var CFG = null;
+
+/* ── Detect local file ── */
+if(window.location.protocol === 'file:'){
+  document.getElementById('local-warn').classList.add('show');
+}
+
+/* ── Lightbox state ── */
+var fvGroup=[], fvIdx=0;
+
+function openFv(pageId, idx){
+  fvGroup = IMG_CACHE[pageId] || [];
+  fvIdx   = idx;
+  renderFv();
+  document.getElementById('r-open').checked = true;
+  document.querySelector('meta[name="viewport"]').content =
+    'width=device-width,initial-scale=1.0,user-scalable=no';
+  resetZoom();
+}
+function renderFv(){
+  if(!fvGroup.length) return;
+  var im = fvGroup[fvIdx];
+  document.getElementById('fv-img').src = im.src;
+  document.getElementById('fv-img').alt = im.cap;
+  document.getElementById('fv-cap').textContent = im.cap;
+  document.getElementById('fv-counter').textContent=(fvIdx+1)+' / '+fvGroup.length;
+  document.getElementById('fv-prev').classList.toggle('off',fvIdx===0);
+  document.getElementById('fv-next').classList.toggle('off',fvIdx===fvGroup.length-1);
+}
+function fvNav(dir){
+  fvIdx=Math.max(0,Math.min(fvIdx+dir,fvGroup.length-1));
+  renderFv(); resetZoom();
+}
+document.getElementById('fv-close-btn').addEventListener('click',function(){
+  document.querySelector('meta[name="viewport"]').content='width=device-width,initial-scale=1.0';
+  resetZoom();
+});
+
+/* ── Pinch-zoom / mouse-wheel ── */
+var sc=1,tx=0,ty=0,pts={};
+var initDist=0,initSc=1,initPX=0,initPY=0,initTX=0,initTY=0,lastTap=0;
+var wrap=document.getElementById('fv-img-wrap');
+var zImg=document.getElementById('fv-img');
+function zRender(){zImg.style.transform='scale('+sc+') translate('+tx+'px,'+ty+'px)';}
+function resetZoom(){sc=1;tx=0;ty=0;zRender();}
+function plist(){return Object.values(pts);}
+
+wrap.addEventListener('pointerdown',function(e){
+  wrap.setPointerCapture(e.pointerId);
+  pts[e.pointerId]=e;
+  var pl=plist();
+  if(pl.length===2){
+    initDist=Math.hypot(pl[1].clientX-pl[0].clientX,pl[1].clientY-pl[0].clientY);
+    initSc=sc;initTX=tx;initTY=ty;
+  } else {
+    var now=Date.now();
+    if(now-lastTap<300){resetZoom();return;}
+    lastTap=now;
+    initPX=e.clientX;initPY=e.clientY;initTX=tx;initTY=ty;
+  }
+});
+wrap.addEventListener('pointermove',function(e){
+  if(!pts[e.pointerId])return;
+  e.preventDefault();
+  pts[e.pointerId]=e;
+  var pl=plist();
+  if(pl.length>=2){
+    var d=Math.hypot(pl[1].clientX-pl[0].clientX,pl[1].clientY-pl[0].clientY);
+    sc=Math.min(Math.max(initSc*d/initDist,0.2),5);zRender();
+  } else if(sc!==1){
+    tx=initTX+(e.clientX-initPX)/sc;
+    ty=initTY+(e.clientY-initPY)/sc;
+    zRender();
+  }
+},{passive:false});
+wrap.addEventListener('pointerup',function(e){
+  delete pts[e.pointerId];
+  var pl=plist();
+  if(pl.length===0&&sc>0.85&&sc<1.15){sc=1;tx=0;ty=0;zRender();}
+  if(pl.length===1){initPX=pl[0].clientX;initPY=pl[0].clientY;initTX=tx;initTY=ty;}
+});
+wrap.addEventListener('pointercancel',function(e){delete pts[e.pointerId];});
+wrap.addEventListener('wheel',function(e){
+  e.preventDefault();
+  var r=wrap.getBoundingClientRect();
+  var cx=e.clientX-r.left-r.width/2, cy=e.clientY-r.top-r.height/2;
+  var delta=e.deltaY>0?0.9:1.1;
+  var ns=Math.min(Math.max(sc*delta,0.2),5);
+  tx=cx/ns-cx/sc+tx*(sc/ns)*(ns/sc);
+  ty=cy/ns-cy/sc+ty*(sc/ns)*(ns/sc);
+  sc=ns;
+  if(sc>0.85&&sc<1.15){sc=1;tx=0;ty=0;}
+  zRender();
+},{passive:false});
+
+/* Panel size */
+function sizePanels(){
+  var p=document.getElementById('fv-panel');
+  p.style.height=window.innerHeight+'px';
+  p.style.width=window.innerWidth+'px';
+}
+sizePanels();
+window.addEventListener('resize',sizePanels);
+window.addEventListener('orientationchange',function(){setTimeout(sizePanels,120);});
+
+/* Keyboard */
+document.addEventListener('keydown',function(e){
+  if(document.getElementById('r-open').checked){
+    if(e.key==='Escape') document.getElementById('r-none').checked=true;
+    if(e.key==='ArrowLeft')  fvNav(-1);
+    if(e.key==='ArrowRight') fvNav(1);
+  }
+});
+
+/* ── Filename → title ── */
+function toTitle(name){
+  return name.replace(/\.[^.]+$/,'').replace(/^\d+[_\-.\s]+/,'').replace(/[-_]/g,' ').trim();
+}
+
+/* ── Page ID from fldr + sub ── */
+function pageId(fldr,sub){ return fldr+'-'+sub; }
+
+/* ── Show/hide a page ── */
+function showPage(fldr, sub){
+  activeFldr=fldr; activeSub=sub;
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  var pg=document.getElementById('pg-'+pageId(fldr,sub));
+  if(pg) pg.classList.add('active');
+  /* Mark active nav buttons */
+  document.querySelectorAll('.pnav-btn').forEach(function(b){
+    b.classList.toggle('active', b.dataset.fldr===fldr);
+  });
+  document.querySelectorAll('.snav-btn').forEach(function(b){
+    b.classList.toggle('active', b.dataset.sub===sub && b.dataset.fldr===fldr);
+  });
+  window.scrollTo(0,0);
+  /* Lazy-load images */
+  loadImages(fldr, sub);
+}
+
+/* ── Switch main folder ── */
+function showFolder(fldr){
+  /* Show secondary nav for this folder */
+  buildSecondaryNav(fldr);
+  /* Auto-select first sub */
+  var firstSub = getFirstSub(fldr);
+  if(firstSub) showPage(fldr, firstSub);
+}
+
+/* ── Build secondary nav for a folder ── */
+function buildSecondaryNav(fldr){
+  var nav=document.getElementById('secondary-nav');
+  nav.innerHTML='';
+  nav.classList.remove('hidden');
+  if(!CFG||!CFG.menu[fldr]) return;
+  var subs=CFG.menu[fldr].subs;
+  Object.keys(subs).sort().forEach(function(sub){
+    if(!subs[sub]) return; /* skip subs with no name (not configured) */
+    var btn=document.createElement('button');
+    btn.className='snav-btn';
+    btn.textContent=subs[sub];
+    btn.dataset.fldr=fldr;
+    btn.dataset.sub=sub;
+    btn.setAttribute('onclick',"showPage('"+fldr+"','"+sub+"')");
+    nav.appendChild(btn);
+  });
+}
+
+function getFirstSub(fldr){
+  if(!CFG||!CFG.menu[fldr]) return null;
+  var subs=CFG.menu[fldr].subs;
+  var keys=Object.keys(subs).sort().filter(function(k){return subs[k];});
+  return keys.length ? keys[0] : null;
+}
+
+/* ── Lazy image loader ── */
+function loadImages(fldr, sub){
+  var pid=pageId(fldr,sub);
+  if(LOADED[pid]) return;
+  LOADED[pid]=true;
+  var pg=document.getElementById('pg-'+pid);
+  if(!pg) return;
+  var loading=pg.querySelector('.loading');
+  fetch(BASE_API+fldr+'/'+sub)
+    .then(function(r){
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      return r.json();
+    })
+    .then(function(files){
+      if(loading) loading.remove();
+      var imgs=files
+        .filter(function(f){return f.type==='file'&&IMG_EXT.test(f.name);})
+        .sort(function(a,b){return a.name.localeCompare(b.name);});
+      if(!imgs.length){
+        var m=document.createElement('p');
+        m.className='empty-msg';
+        m.textContent='No images found in this folder.';
+        pg.appendChild(m);
+        return;
+      }
+      var groupImages=imgs.map(function(f){
+        return {src:BASE_RAW+f.path, cap:toTitle(f.name)};
+      });
+      IMG_CACHE[pid]=groupImages;
+      var grid=document.createElement('div');
+      grid.className='photo-grid';
+      imgs.forEach(function(f,idx){
+        var lbl=document.createElement('label');
+        lbl.className='grid-lbl';
+        lbl.setAttribute('for','r-open');
+        lbl.setAttribute('onclick',"openFv('"+pid+"',"+idx+")");
+        var di=document.createElement('div'); di.className='grid-img';
+        var img=document.createElement('img');
+        img.src=BASE_RAW+f.path; img.alt=toTitle(f.name); img.loading='lazy';
+        di.appendChild(img);
+        var info=document.createElement('div'); info.className='grid-info';
+        var t=document.createElement('div'); t.className='grid-title';
+        t.textContent=toTitle(f.name);
+        info.appendChild(t);
+        lbl.appendChild(di); lbl.appendChild(info);
+        grid.appendChild(lbl);
+      });
+      pg.appendChild(grid);
+    })
+    .catch(function(err){
+      if(loading) loading.remove();
+      var d=document.createElement('div'); d.className='err-msg';
+      d.innerHTML='Could not load <code>'+fldr+'/'+sub+'</code> ('+err+')<br>'+
+        '<a href="'+BASE_API+fldr+'/'+sub+'" target="_blank">Test API link</a>';
+      pg.appendChild(d);
+    });
+}
+
+/* ── About page ── */
+function buildAboutPage(cfg){
+  var pg=document.createElement('div');
+  pg.className='page'; pg.id='pg-about';
+  var w=document.createElement('div'); w.className='about-wrap';
+  var h=document.createElement('h2'); h.textContent='About the artist';
+  var p=document.createElement('p'); p.textContent=cfg.about||'Write about yourself here.';
+  w.appendChild(h); w.appendChild(p);
+  if(cfg.email){
+    var a=document.createElement('a'); a.className='contact-link';
+    a.href='mailto:'+cfg.email; a.textContent='Get in touch';
+    w.appendChild(a);
+  }
+  pg.appendChild(w);
+  document.getElementById('pages').appendChild(pg);
+  return pg;
+}
+
+/* ── Main bootstrap ── */
+function boot(cfg){
+  CFG=cfg;
+
+  /* Site name */
+  var sn=document.getElementById('site-name-el');
+  sn.innerHTML=(cfg.site_first||'Your')+' <em>'+(cfg.site_last||'Name')+'</em>';
+  sn.setAttribute('onclick',"showFolder('"+Object.keys(cfg.menu)[0]+"')");
+
+  /* About page */
+  buildAboutPage(cfg);
+
+  /* For each configured folder, fetch its GitHub listing to verify
+     which subs actually exist, then build nav + pages               */
+  var fldrKeys=Object.keys(cfg.menu).sort();
+  var pNav=document.getElementById('primary-nav');
+
+  /* We'll process folders sequentially so the first visible one
+     gets auto-selected after all checks complete                   */
+  var readyFolders=[];
+
+  var pending=fldrKeys.length;
+  if(!pending){ buildAboutBtn(pNav); return; }
+
+  fldrKeys.forEach(function(fldr){
+    /* Fetch listing of the main folder to check which subs exist */
+    fetch(BASE_API+fldr)
+      .then(function(r){ return r.ok ? r.json() : []; })
+      .catch(function(){ return []; })
+      .then(function(items){
+        /* items is the list of files/dirs inside fldrXX */
+        var existingDirs={};
+        items.forEach(function(it){
+          if(it.type==='dir') existingDirs[it.name]=true;
+        });
+
+        /* Filter subs: must be in config AND exist in repo */
+        var cfgSubs=cfg.menu[fldr].subs||{};
+        var validSubs=Object.keys(cfgSubs).sort().filter(function(sub){
+          return cfgSubs[sub] && existingDirs[sub];
+        });
+
+        if(validSubs.length){
+          readyFolders.push({fldr:fldr, subs:validSubs});
+          /* Create pages for each valid sub */
+          validSubs.forEach(function(sub){
+            var pid=pageId(fldr,sub);
+            var pg=document.createElement('div');
+            pg.className='page'; pg.id='pg-'+pid;
+            var ld=document.createElement('p'); ld.className='loading';
+            ld.textContent='Loading…'; pg.appendChild(ld);
+            document.getElementById('pages').appendChild(pg);
+          });
+        }
+
+        pending--;
+        if(pending===0) finalizeNav(readyFolders, pNav, cfg);
+      });
+  });
+}
+
+function finalizeNav(readyFolders, pNav, cfg){
+  /* Sort readyFolders by fldr key */
+  readyFolders.sort(function(a,b){return a.fldr.localeCompare(b.fldr);});
+
+  readyFolders.forEach(function(item){
+    var name=cfg.menu[item.fldr].name||item.fldr;
+    var btn=document.createElement('button');
+    btn.className='pnav-btn';
+    btn.textContent=name;
+    btn.dataset.fldr=item.fldr;
+    btn.setAttribute('onclick',"showFolder('"+item.fldr+"')");
+    pNav.appendChild(btn);
+
+    /* Pre-populate secondary nav config so subs are available */
+    /* (already in CFG.menu[fldr].subs, but restrict to valid ones) */
+    var validSubsObj={};
+    item.subs.forEach(function(sub){
+      validSubsObj[sub]=cfg.menu[item.fldr].subs[sub];
+    });
+    CFG.menu[item.fldr].subs=validSubsObj;
+  });
+
+  /* About button */
+  buildAboutBtn(pNav);
+
+  /* Auto-select first folder */
+  if(readyFolders.length) showFolder(readyFolders[0].fldr);
+}
+
+function buildAboutBtn(pNav){
+  var btn=document.createElement('button');
+  btn.className='pnav-btn'; btn.textContent='About';
+  btn.dataset.fldr='about';
+  btn.setAttribute('onclick',"showAbout()");
+  pNav.appendChild(btn);
+}
+
+function showAbout(){
+  activeFldr='about'; activeSub=null;
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.getElementById('pg-about').classList.add('active');
+  document.querySelectorAll('.pnav-btn').forEach(function(b){
+    b.classList.toggle('active',b.dataset.fldr==='about');
+  });
+  document.getElementById('secondary-nav').innerHTML='';
+  document.getElementById('secondary-nav').classList.add('hidden');
+  window.scrollTo(0,0);
+}
+
+/* ── Fetch config.json from repo ── */
+fetch(BASE_API+'config.json')
+  .then(function(r){
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r.json();
+  })
+  .then(function(data){
+    /* GitHub API returns file metadata; content is base64-encoded */
+    var json=JSON.parse(atob(data.content.replace(/\n/g,'')));
+    boot(json);
+  })
+  .catch(function(err){
+    /* Show setup instructions */
+    var pages=document.getElementById('pages');
+    pages.innerHTML='<div style="padding:2rem;font-size:.85rem;line-height:1.9;color:var(--muted)">'+
+      '<strong style="color:var(--ink)">Setup: create config.json in your repository root</strong><br>'+
+      'Error fetching config: '+err+'<br><br>'+
+      'Create a file called <code>config.json</code> in the root of your GitHub repository with this content:<br><br>'+
+      '<pre style="background:#eee;padding:1rem;font-size:.78rem;overflow-x:auto;border-radius:4px">'+
+      '{\n'+
+      '  "site_first": "Paul",\n'+
+      '  "site_last":  "Steendijk",\n'+
+      '  "about":      "Write about yourself here.",\n'+
+      '  "email":      "you@example.com",\n'+
+      '  "menu": {\n'+
+      '    "fldr01": {\n'+
+      '      "name": "Paintings",\n'+
+      '      "subs": { "sub01": "2024", "sub02": "2023" }\n'+
+      '    },\n'+
+      '    "fldr02": {\n'+
+      '      "name": "Drawings",\n'+
+      '      "subs": { "sub01": "Sketches" }\n'+
+      '    }\n'+
+      '  }\n'+
+      '}</pre>'+
+      'Then create matching folders in your repo: <code>fldr01/sub01/</code>, <code>fldr01/sub02/</code>, etc.<br>'+
+      'Upload your images into those folders.<br><br>'+
+      '<a href="'+BASE_API+'config.json" target="_blank" style="color:var(--accent)">Test config.json API link</a>'+
+      '</div>';
+  });
+</script>
+</body>
+</html>

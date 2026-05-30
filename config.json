@@ -1,0 +1,32 @@
+{
+  "site_first": "Paul",
+  "site_last":  "Steendijk",
+  "about":      "This is me.",
+  "email":      "paulsteendijkportfolio@gmail.com",
+  "menu": {
+    "fldr01": {
+      "name": "sketches",
+      "subs": {
+        "sub01": "#1",
+        "sub02": "nummer 2",
+        "sub03": "en 3"
+      }
+    },
+    "fldr02": {
+      "name": "fotos",
+      "subs": {
+        "sub01": "Pencil",
+        "sub02": "Charcoal",
+        "sub03": "Ink"
+      }
+    },
+    "fldr03": {
+      "name": "folder #3",
+      "subs": {
+        "sub01": "Landscapes",
+        "sub02": "Portraits",
+	"sub03": "and more"
+      }
+    }
+  }
+}
