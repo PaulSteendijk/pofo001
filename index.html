@@ -11,8 +11,9 @@
   --bg:#f7f5f0;--ink:#1a1a18;--muted:#8a8880;
   --accent:#c8a96e;--white:#fff;--border:rgba(26,26,24,.13);
   --pad:2.5rem;
+  --cols:3;  /* default grid columns — changed by JS */
 }
-@media(max-width:600px){:root{--pad:1rem}}
+@media(max-width:500px){:root{--cols:2}}
 body{font-family:'Jost',sans-serif;font-weight:300;background:var(--bg);color:var(--ink);min-height:100vh}
 
 /* ── Local file warning ── */
@@ -116,8 +117,28 @@ header{padding:2.5rem var(--pad) 0;display:flex;align-items:baseline;justify-con
 .page.active{display:block}
 
 /* ── Photo grid ── */
-.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:.5rem}
-@media(max-width:500px){.photo-grid{grid-template-columns:repeat(2,1fr);gap:6px}}
+.photo-grid{display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:8px;margin-top:.5rem}
+@media(max-width:500px){.photo-grid{gap:5px}}
+
+/* Column picker */
+.col-picker{
+  display:flex;align-items:center;gap:.4rem;
+  padding:.6rem var(--pad) 0;
+}
+.col-picker-label{
+  font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);margin-right:.2rem;
+}
+.col-btn{
+  width:26px;height:26px;border-radius:3px;
+  background:none;border:1px solid var(--border);
+  color:var(--muted);font-size:.72rem;font-family:'Jost',sans-serif;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .15s,color .15s,border-color .15s;
+  touch-action:manipulation;
+}
+.col-btn:hover{background:var(--white);color:var(--ink)}
+.col-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .grid-lbl{display:block;cursor:pointer;background:var(--white);border:1px solid var(--border);transition:box-shadow .2s;-webkit-tap-highlight-color:rgba(200,169,110,.2)}
 .grid-lbl:hover{box-shadow:0 3px 14px rgba(0,0,0,.1)}
 .grid-img{aspect-ratio:1;overflow:hidden}
@@ -179,6 +200,14 @@ header{padding:2.5rem var(--pad) 0;display:flex;align-items:baseline;justify-con
 <div class="nav-wrap">
   <div class="divider1"></div>
   <nav id="secondary-nav" class="hidden"></nav>
+  <div class="col-picker" id="col-picker">
+    <span class="col-picker-label">Columns</span>
+    <button class="col-btn" onclick="setCols(2)">2</button>
+    <button class="col-btn active" onclick="setCols(3)">3</button>
+    <button class="col-btn" onclick="setCols(4)">4</button>
+    <button class="col-btn" onclick="setCols(5)">5</button>
+    <button class="col-btn" onclick="setCols(6)">6</button>
+  </div>
 </div>
 <div class="divider2"></div>
 
@@ -375,6 +404,21 @@ sizePanels();
 window.addEventListener('resize',sizePanels);
 window.addEventListener('orientationchange',function(){setTimeout(sizePanels,120);});
 
+/* ── Column picker ── */
+function setCols(n){
+  document.documentElement.style.setProperty('--cols', n);
+  document.querySelectorAll('.col-btn').forEach(function(b){
+    b.classList.toggle('active', parseInt(b.textContent)===n);
+  });
+  try{ localStorage.setItem('portfolio-cols', n); }catch(e){}
+}
+/* Restore saved column preference */
+(function(){
+  var saved = null;
+  try{ saved=localStorage.getItem('portfolio-cols'); }catch(e){}
+  if(saved) setCols(parseInt(saved));
+})();
+
 /* Keyboard */
 document.addEventListener('keydown',function(e){
   if(document.getElementById('r-open').checked){
@@ -453,54 +497,78 @@ function loadImages(fldr, sub){
   var pg=document.getElementById('pg-'+pid);
   if(!pg) return;
   var loading=pg.querySelector('.loading');
-  fetch(BASE_API+fldr+'/'+sub)
-    .then(function(r){
-      if(!r.ok) throw new Error('HTTP '+r.status);
-      return r.json();
-    })
-    .then(function(files){
-      if(loading) loading.remove();
-      var imgs=files
-        .filter(function(f){return f.type==='file'&&IMG_EXT.test(f.name);})
-        .sort(function(a,b){return a.name.localeCompare(b.name);});
-      if(!imgs.length){
-        var m=document.createElement('p');
-        m.className='empty-msg';
-        m.textContent='No images found in this folder.';
-        pg.appendChild(m);
-        return;
+
+  var folder = fldr+'/'+sub;
+
+  /* Fetch the main folder and the thumbs subfolder in parallel */
+  Promise.all([
+    fetch(BASE_API+folder).then(function(r){ return r.ok?r.json():[]; }).catch(function(){return [];}),
+    fetch(BASE_API+folder+'/thumbs').then(function(r){ return r.ok?r.json():[]; }).catch(function(){return [];})
+  ]).then(function(results){
+    var mainFiles  = results[0];
+    var thumbFiles = results[1];
+
+    if(loading) loading.remove();
+
+    /* Build a map of filename → thumb URL */
+    var thumbMap = {};
+    thumbFiles.forEach(function(f){
+      if(f.type==='file' && IMG_EXT.test(f.name)){
+        thumbMap[f.name] = BASE_RAW+f.path;
       }
-      var groupImages=imgs.map(function(f){
-        return {src:BASE_RAW+f.path, cap:toTitle(f.name)};
-      });
-      IMG_CACHE[pid]=groupImages;
-      var grid=document.createElement('div');
-      grid.className='photo-grid';
-      imgs.forEach(function(f,idx){
-        var lbl=document.createElement('label');
-        lbl.className='grid-lbl';
-        lbl.setAttribute('for','r-open');
-        lbl.setAttribute('onclick',"openFv('"+pid+"',"+idx+")");
-        var di=document.createElement('div'); di.className='grid-img';
-        var img=document.createElement('img');
-        img.src=BASE_RAW+f.path; img.alt=toTitle(f.name); img.loading='lazy';
-        di.appendChild(img);
-        var info=document.createElement('div'); info.className='grid-info';
-        var t=document.createElement('div'); t.className='grid-title';
-        t.textContent=toTitle(f.name);
-        info.appendChild(t);
-        lbl.appendChild(di); lbl.appendChild(info);
-        grid.appendChild(lbl);
-      });
-      pg.appendChild(grid);
-    })
-    .catch(function(err){
-      if(loading) loading.remove();
-      var d=document.createElement('div'); d.className='err-msg';
-      d.innerHTML='Could not load <code>'+fldr+'/'+sub+'</code> ('+err+')<br>'+
-        '<a href="'+BASE_API+fldr+'/'+sub+'" target="_blank">Test API link</a>';
-      pg.appendChild(d);
     });
+
+    var imgs = mainFiles
+      .filter(function(f){ return f.type==='file' && IMG_EXT.test(f.name); })
+      .sort(function(a,b){ return a.name.localeCompare(b.name); });
+
+    if(!imgs.length){
+      var m=document.createElement('p');
+      m.className='empty-msg';
+      m.textContent='No images found in this folder.';
+      pg.appendChild(m);
+      return;
+    }
+
+    /* Store full-res URLs for lightbox */
+    var groupImages=imgs.map(function(f){
+      return {
+        src: BASE_RAW+f.path,          /* full-res for lightbox */
+        cap: toTitle(f.name)
+      };
+    });
+    IMG_CACHE[pid]=groupImages;
+
+    var grid=document.createElement('div');
+    grid.className='photo-grid';
+
+    imgs.forEach(function(f,idx){
+      /* Use thumb if available, otherwise full-res */
+      var thumbSrc = thumbMap[f.name] || BASE_RAW+f.path;
+
+      var lbl=document.createElement('label');
+      lbl.className='grid-lbl';
+      lbl.setAttribute('for','r-open');
+      lbl.setAttribute('onclick',"openFv('"+pid+"',"+idx+")");
+
+      var di=document.createElement('div'); di.className='grid-img';
+      var img=document.createElement('img');
+      img.src=thumbSrc;               /* thumbnail in grid */
+      img.alt=toTitle(f.name);
+      img.loading='lazy';
+      di.appendChild(img);
+
+      var info=document.createElement('div'); info.className='grid-info';
+      var t=document.createElement('div'); t.className='grid-title';
+      t.textContent=toTitle(f.name);
+      info.appendChild(t);
+
+      lbl.appendChild(di); lbl.appendChild(info);
+      grid.appendChild(lbl);
+    });
+
+    pg.appendChild(grid);
+  });
 }
 
 /* ── About page ── */
