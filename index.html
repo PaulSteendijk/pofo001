@@ -428,9 +428,10 @@ var zImg=document.getElementById('fv-img');
 var fitSc=1; /* scale that makes image fill viewport width */
 
 function calcFit(){
-  /* Use wrap width so image starts exactly viewport-wide */
-  if(zImg.naturalWidth > 0){
-    fitSc = wrap.clientWidth / zImg.naturalWidth;
+  if(zImg.naturalWidth > 0 && zImg.naturalHeight > 0){
+    var scW = wrap.clientWidth  / zImg.naturalWidth;
+    var scH = wrap.clientHeight / zImg.naturalHeight;
+    fitSc = Math.min(scW, scH);  /* use whichever constrains more */
   } else {
     fitSc = 1;
   }
