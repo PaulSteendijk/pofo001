@@ -120,6 +120,7 @@ header{padding:2.5rem var(--pad) 0;display:flex;align-items:baseline;justify-con
   display:flex;flex-wrap:wrap;gap:.1rem;
   padding:.4rem var(--pad) 0;
   min-height:2rem;
+  justify-content:flex-end;
 }
 #secondary-nav.hidden{visibility:hidden}
 .snav-btn{
@@ -758,7 +759,7 @@ function boot(cfg){
   /* Site name */
   var sn=document.getElementById('site-name-el');
   sn.innerHTML=(cfg.site_first||'Your')+' <em>'+(cfg.site_last||'Name')+'</em>';
-  sn.setAttribute('onclick',"showFolder('"+Object.keys(cfg.menu)[0]+"')");
+  sn.setAttribute('onclick',"showAbout()");
 
   /* About page */
   buildAboutPage(cfg);
