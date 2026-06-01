@@ -1,7 +1,7 @@
 {
   "site_first":   "Paul",
-  "site_last":    "Steendijk: my Portfolio",
-  "about":        "Write a few sentences about yourself here: xxxx",
+  "site_last":    "Steendijk See my Portfolio",
+  "about":        "I am Paul",
   "about_image":  "",
   "email":        "paulsteendijkportfolio@gmail.com",
   "menu": {
@@ -9,7 +9,7 @@
       "name": "Sketches",
       "desc": "Sketches and fast drawings",
       "subs": {
-        "sub01": { "name": "Gesture drawings", "desc": "Arendonk, 2024-2025" },
+        "sub01": { "name": "Gesture drawings", "desc": "Arendonk 2024-2025" },
         "sub02": { "name": "2023", "desc": "Works completed in 2023" },
         "sub03": { "name": "2022", "desc": "Works completed in 2022" }
       }
@@ -28,8 +28,8 @@
       "desc": "Oil paintings",
       "subs": {
         "sub01": { "name": "Portraits", "desc": "Arendonk" },
-        "sub02": { "name": "Landscapes",  "desc": "Arendonk, mainly" },
-        "sub03": { "name": "Still lifes",  "desc": "Arendonk, mainly" }
+        "sub02": { "name": "Landscapes",  "desc": "Arendonk mainly" },
+        "sub03": { "name": "Still lifes",  "desc": "Arendonk mainly" }
       }
     }
   }
