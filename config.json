@@ -1,34 +1,35 @@
 {
   "site_first":   "Paul",
-  "site_last":    "Steendijk",
+  "site_last":    "Steendijk - Portfolio",
   "about":        "Write a few sentences about yourself here: xxxx",
   "about_image":  "",
   "email":        "paulsteendijkportfolio@gmail.com",
   "menu": {
     "fldr01": {
-      "name": "Paintings",
-      "desc": "Oil, acrylic and watercolour works",
+      "name": "Sketches",
+      "desc": "Sketches and fast drawings",
       "subs": {
-        "sub01": { "name": "2024", "desc": "Recent work from 2024" },
+        "sub01": { "name": "Gesture drawings", "desc": "Arendonk, 2024-2025" },
         "sub02": { "name": "2023", "desc": "Works completed in 2023" },
         "sub03": { "name": "2022", "desc": "Works completed in 2022" }
       }
     },
     "fldr02": {
-      "name": "Drawings",
-      "desc": "Pencil, charcoal and ink studies",
+      "name": "Watercolors",
+      "desc": "Ink and watercolors sketches",
       "subs": {
-        "sub01": { "name": "Pencil",   "desc": "Graphite and pencil drawings" },
-        "sub02": { "name": "Charcoal", "desc": "Charcoal studies" },
-        "sub03": { "name": "Ink",      "desc": "Ink and brush drawings" }
+        "sub01": { "name": "Mexico",   "desc": "Travel sketches Dec 2024" },
+        "sub02": { "name": "Italy", "desc": "Travel sketches March 2026" },
+        "sub03": { "name": "Various",      "desc": "Urban sketches" }
       }
     },
     "fldr03": {
-      "name": "Photography",
-      "desc": "Digital and film photography",
+      "name": "Oils",
+      "desc": "Oil paintings",
       "subs": {
-        "sub01": { "name": "Landscapes", "desc": "Outdoor and landscape photography" },
-        "sub02": { "name": "Portraits",  "desc": "Portrait photography" }
+        "sub01": { "name": "Portraits", "desc": "Arendonk" },
+        "sub02": { "name": "Landscapes",  "desc": "Arendonk, mainly" },
+        "sub03": { "name": "Still lifes",  "desc": "Arendonk, mainly" }
       }
     }
   }
