@@ -893,25 +893,10 @@ function showAll(){
 
   /* Fetch tags.json if not yet loaded, then build grid */
   if(Object.keys(TAGS_CFG).length === 0){
-    fetch(BASE_API+'tags.json')
-      .then(function(r){ return r.ok ? r.json() : null; })
-      .then(function(data){
-        if(data){
-          /* GitHub API: content is base64 */
-          var json = JSON.parse(atob(data.content.replace(/\n/g,'')));
-          TAGS_CFG = json;
-        }
-        /* Always ensure #00 exists */
-        if(!TAGS_CFG['00']) TAGS_CFG['00'] = 'All';
-        buildShowAllGrid(pg);
-      })
-      .catch(function(){
-        TAGS_CFG = {'00':'All'};
-        buildShowAllGrid(pg);
-      });
-  } else {
-    buildShowAllGrid(pg);
+    /* tags.json not loaded yet (no tags.json in repo) — use default */
+    TAGS_CFG = {'00':'All'};
   }
+  buildShowAllGrid(pg);
 }
 
 function buildShowAllGrid(pg){
@@ -1175,46 +1160,58 @@ function showAbout(){
   window.scrollTo(0,0);
 }
 
-/* ── Fetch config.json from repo ── */
-fetch(BASE_API+'config.json')
-  .then(function(r){
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    return r.json();
-  })
-  .then(function(data){
-    /* GitHub API returns file metadata; content is base64-encoded */
-    var json=JSON.parse(atob(data.content.replace(/\n/g,'')));
-    boot(json);
-  })
-  .catch(function(err){
-    /* Show setup instructions */
-    var pages=document.getElementById('pages');
-    pages.innerHTML='<div style="padding:2rem;font-size:.85rem;line-height:1.9;color:var(--muted)">'+
-      '<strong style="color:var(--ink)">Setup: create config.json in your repository root</strong><br>'+
-      'Error fetching config: '+err+'<br><br>'+
-      'Create a file called <code>config.json</code> in the root of your GitHub repository with this content:<br><br>'+
-      '<pre style="background:#eee;padding:1rem;font-size:.78rem;overflow-x:auto;border-radius:4px">'+
-      '{\n'+
-      '  "site_first": "Paul",\n'+
-      '  "site_last":  "Steendijk",\n'+
-      '  "about":      "Write about yourself here.",\n'+
-      '  "email":      "you@example.com",\n'+
-      '  "menu": {\n'+
-      '    "fldr01": {\n'+
-      '      "name": "Paintings",\n'+
-      '      "subs": { "sub01": "2024", "sub02": "2023" }\n'+
-      '    },\n'+
-      '    "fldr02": {\n'+
-      '      "name": "Drawings",\n'+
-      '      "subs": { "sub01": "Sketches" }\n'+
-      '    }\n'+
-      '  }\n'+
-      '}</pre>'+
-      'Then create matching folders in your repo: <code>fldr01/sub01/</code>, <code>fldr01/sub02/</code>, etc.<br>'+
-      'Upload your images into those folders.<br><br>'+
-      '<a href="'+BASE_API+'config.json" target="_blank" style="color:var(--accent)">Test config.json API link</a>'+
-      '</div>';
-  });
+/* ── Fetch config.json AND tags.json at startup ── */
+Promise.all([
+  fetch(BASE_API+'config.json')
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }),
+  fetch(BASE_API+'tags.json')
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .catch(function(){ return null; })
+])
+.then(function(results){
+  var cfgData  = results[0];
+  var tagsData = results[1];
+
+  /* Parse tags.json — GitHub API returns base64-encoded content */
+  if(tagsData && tagsData.content){
+    try{
+      TAGS_CFG = JSON.parse(atob(tagsData.content.replace(/\n/g,'')));
+    }catch(e){}
+  }
+  if(!TAGS_CFG['00']) TAGS_CFG['00'] = 'All';
+
+  /* Parse config.json and boot */
+  var json = JSON.parse(atob(cfgData.content.replace(/\n/g,'')));
+  boot(json);
+})
+.catch(function(err){
+  var pages=document.getElementById('pages');
+  pages.innerHTML='<div style="padding:2rem;font-size:.85rem;line-height:1.9;color:var(--muted)">'+
+    '<strong style="color:var(--ink)">Setup: create config.json in your repository root</strong><br>'+
+    'Error fetching config: '+err+'<br><br>'+
+    'Create a file called <code>config.json</code> in the root of your GitHub repository with this content:<br><br>'+
+    '<pre style="background:#eee;padding:1rem;font-size:.78rem;overflow-x:auto;border-radius:4px">'+
+    '{\n'+
+    '  "site_first": "Paul",\n'+
+    '  "site_last":  "Steendijk",\n'+
+    '  "about":      "Write about yourself here.",\n'+
+    '  "email":      "you@example.com",\n'+
+    '  "menu": {\n'+
+    '    "fldr01": {\n'+
+    '      "name": "Paintings",\n'+
+    '      "subs": { "sub01": "2024", "sub02": "2023" }\n'+
+    '    },\n'+
+    '    "fldr02": {\n'+
+    '      "name": "Drawings",\n'+
+    '      "subs": { "sub01": "Sketches" }\n'+
+    '    }\n'+
+    '  }\n'+
+    '}</pre>'+
+    'Then create matching folders in your repo: <code>fldr01/sub01/</code>, <code>fldr01/sub02/</code>, etc.<br>'+
+    'Upload your images into those folders.<br><br>'+
+    '<a href="'+BASE_API+'config.json" target="_blank" style="color:var(--accent)">Test config.json API link</a>'+
+    '</div>';
+});
 </script>
 </body>
 </html>
