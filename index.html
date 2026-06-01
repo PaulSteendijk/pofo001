@@ -228,7 +228,8 @@ header{padding:2.5rem var(--pad) 0;display:flex;align-items:baseline;justify-con
 .grid-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s}
 .grid-lbl:hover .grid-img img{transform:scale(1.05)}
 .grid-info{padding:6px 8px 8px;border-top:1px solid var(--border)}
-.grid-title{font-size:.75rem;letter-spacing:.03em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.grid-title{font-size:.75rem;letter-spacing:.03em;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.grid-title .tag-labels{color:var(--muted);font-size:.68rem;}
 
 /* ── Loading / status ── */
 .loading{padding:1.5rem 0;font-size:.82rem;color:var(--muted);letter-spacing:.05em}
@@ -671,7 +672,7 @@ function loadImages(fldr, sub){
       return {
         src:   safeUrl(f.path),
         thumb: thumbMap[f.name] || safeUrl(f.path),
-        cap:   toTitle(f.name),
+        cap:   toBaseName(f.name),
         tags:  extractTags(f.name)   /* needed by Show All tag filter */
       };
     });
@@ -946,13 +947,23 @@ function buildShowAllGrid(pg){
       thumbFiles.forEach(function(f){ if(f.type==='file'&&IMG_EXT.test(f.name)) thumbMap[f.name]=safeUrl(f.path); });
       var imgs=mainFiles.filter(function(f){return f.type==='file'&&IMG_EXT.test(f.name);}).sort(function(a,b){return a.name.localeCompare(b.name);});
       IMG_CACHE[pid]=imgs.map(function(f){
-        return {src:safeUrl(f.path), thumb:thumbMap[f.name]||safeUrl(f.path), cap:toTitle(f.name), tags:extractTags(f.name)};
+        return {src:safeUrl(f.path), thumb:thumbMap[f.name]||safeUrl(f.path), cap:toBaseName(f.name), tags:extractTags(f.name)};
       });
       var indPg=document.getElementById('pg-'+pid);
       if(indPg&&!LOADED[pid]){ LOADED[pid]=true; var ld=indPg.querySelector('.loading'); if(ld)ld.remove(); renderIndividualGrid(indPg,pid); }
       done();
     });
   });
+}
+
+/* Build display title from cached image: base name + tag labels in brackets.
+   Used in grids built from IMG_CACHE (Show All + renderIndividualGrid).      */
+function capWithTags(im){
+  if(!im.tags || im.tags.length <= 1) return im.cap;
+  var nums = im.tags.filter(function(t){ return t !== '00'; });
+  if(!nums.length) return im.cap;
+  var labels = nums.map(function(n){ return TAGS_CFG[n] || ('#'+n); });
+  return im.cap + ' [' + labels.join(', ') + ']';
 }
 
 /* Extract tag numbers from filename using __ delimiter.
@@ -971,15 +982,27 @@ function safeUrl(path){
   return BASE_RAW + path.replace(/#/g,'%23');
 }
 
-/* Strip tags and number prefix from filename for display.
-   Handles __ tag delimiter: "002-IMG_7134__02.JPEG" → "IMG 7134" */
-function toTitle(name){
+/* Base name without tags or prefix — used for alt text and captions */
+function toBaseName(name){
   return name
-    .replace(/\.[^.]+$/,'')        /* remove extension              */
-    .replace(/__\d{2}/g,'')        /* remove __01 __02 etc          */
-    .replace(/^\d+[-_.\s]+/,'')    /* remove leading 001_ or 002-   */
-    .replace(/[-_]+/g,' ')         /* dashes/underscores → spaces   */
+    .replace(/\.[^.]+$/,'')
+    .replace(/__\d{2}/g,'')
+    .replace(/^\d+[-_.\s]+/,'')
+    .replace(/[-_]+/g,' ')
     .trim();
+}
+
+/* Full display title with tag labels in brackets — used in grid cells */
+function toTitle(name){
+  var base = toBaseName(name);
+  var tagNums = [];
+  var matches = name.match(/__(\d{2})/g);
+  if(matches) matches.forEach(function(m){
+    var n=m.slice(2); if(n!=='00') tagNums.push(n);
+  });
+  if(!tagNums.length) return base;
+  var labels = tagNums.map(function(n){ return TAGS_CFG[n]||('#'+n); });
+  return base + ' [' + labels.join(', ') + ']';
 }
 
 function renderShowAllGrid(pg, allPairs){
@@ -1115,7 +1138,7 @@ function applyTagFilter(){
     var img=document.createElement('img'); img.src=f.thumb; img.alt=f.im.cap; img.loading='lazy';
     di.appendChild(img);
     var info=document.createElement('div'); info.className='grid-info';
-    var t=document.createElement('div'); t.className='grid-title'; t.textContent=f.im.cap;
+    var t=document.createElement('div'); t.className='grid-title'; t.textContent=capWithTags(f.im);
     info.appendChild(t); lbl.appendChild(di); lbl.appendChild(info); grid.appendChild(lbl);
   });
 
@@ -1134,7 +1157,7 @@ function renderIndividualGrid(pg, pid){
     var img=document.createElement('img'); img.src=im.thumb||im.src; img.alt=im.cap; img.loading='lazy';
     di.appendChild(img);
     var info=document.createElement('div'); info.className='grid-info';
-    var t=document.createElement('div'); t.className='grid-title'; t.textContent=im.cap;
+    var t=document.createElement('div'); t.className='grid-title'; t.textContent=capWithTags(im);
     info.appendChild(t); lbl.appendChild(di); lbl.appendChild(info); grid.appendChild(lbl);
   });
   pg.appendChild(grid);
