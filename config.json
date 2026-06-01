@@ -19,17 +19,17 @@
       "desc": "sketches, paintings and drawings",
       "subs": {
         "sub01": { "name": "gesture drawings",   "desc": "rapid sketches in diluted ink" },
-        "sub02": { "name": "Dirk", "desc": "personal project watercolor" },
+        "sub02": { "name": "project Dirk", "desc": "personal project watercolor" },
         "sub03": { "name": "portraits",      "desc": "misc. portraits" }
       }
     },
     "fldr03": {
-      "name": "Oils",
+      "name": "Arendonk 2025-2026",
       "desc": "Oil paintings",
       "subs": {
-        "sub01": { "name": "Portraits", "desc": "Arendonk" },
-        "sub02": { "name": "Landscapes",  "desc": "Arendonk mainly" },
-        "sub03": { "name": "Still lifes",  "desc": "Arendonk mainly" }
+        "sub01": { "name": "still lifes", "desc": "Arendonk" },
+        "sub02": { "name": "portraits",  "desc": "Arendonk mainly" },
+        "sub03": { "name": "plein air",  "desc": "Arendonk mainly" }
       }
     }
   }
