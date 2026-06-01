@@ -666,11 +666,13 @@ function loadImages(fldr, sub){
       return;
     }
 
-    /* Store full-res URLs for lightbox */
+    /* Store full-res URLs and tags for lightbox + Show All */
     var groupImages=imgs.map(function(f){
       return {
-        src: safeUrl(f.path),          /* full-res for lightbox */
-        cap: toTitle(f.name)
+        src:   safeUrl(f.path),
+        thumb: thumbMap[f.name] || safeUrl(f.path),
+        cap:   toTitle(f.name),
+        tags:  extractTags(f.name)   /* needed by Show All tag filter */
       };
     });
     IMG_CACHE[pid]=groupImages;
