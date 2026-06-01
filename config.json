@@ -18,9 +18,9 @@
       "name": "Arendonk 2004-2025",
       "desc": "sketches, paintings and drawings",
       "subs": {
-        "sub01": { "name": "gesture drawings",   "desc": "Rapid sketches in diluted ink" },
-        "sub02": { "name": "Italy", "desc": "Travel sketches March 2026" },
-        "sub03": { "name": "Various",      "desc": "Urban sketches" }
+        "sub01": { "name": "gesture drawings",   "desc": "rapid sketches in diluted ink" },
+        "sub02": { "name": "Dirk", "desc": "personal project watercolor" },
+        "sub03": { "name": "portraits",      "desc": "misc. portraits" }
       }
     },
     "fldr03": {
