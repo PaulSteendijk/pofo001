@@ -650,7 +650,7 @@ function loadImages(fldr, sub){
     var thumbMap = {};
     thumbFiles.forEach(function(f){
       if(f.type==='file' && IMG_EXT.test(f.name)){
-        thumbMap[f.name] = BASE_RAW+f.path;
+        thumbMap[f.name] = safeUrl(f.path);
       }
     });
 
@@ -669,7 +669,7 @@ function loadImages(fldr, sub){
     /* Store full-res URLs for lightbox */
     var groupImages=imgs.map(function(f){
       return {
-        src: BASE_RAW+f.path,          /* full-res for lightbox */
+        src: safeUrl(f.path),          /* full-res for lightbox */
         cap: toTitle(f.name)
       };
     });
@@ -680,7 +680,7 @@ function loadImages(fldr, sub){
 
     imgs.forEach(function(f,idx){
       /* Use thumb if available, otherwise full-res */
-      var thumbSrc = thumbMap[f.name] || BASE_RAW+f.path;
+      var thumbSrc = thumbMap[f.name] || safeUrl(f.path);
 
       var lbl=document.createElement('label');
       lbl.className='grid-lbl';
@@ -937,10 +937,10 @@ function buildShowAllGrid(pg){
       fetch(BASE_API+folder+'/thumbs').then(function(r){return r.ok?r.json():[];}).catch(function(){return [];})
     ]).then(function(results){
       var mainFiles=results[0], thumbFiles=results[1], thumbMap={};
-      thumbFiles.forEach(function(f){ if(f.type==='file'&&IMG_EXT.test(f.name)) thumbMap[f.name]=BASE_RAW+f.path; });
+      thumbFiles.forEach(function(f){ if(f.type==='file'&&IMG_EXT.test(f.name)) thumbMap[f.name]=safeUrl(f.path); });
       var imgs=mainFiles.filter(function(f){return f.type==='file'&&IMG_EXT.test(f.name);}).sort(function(a,b){return a.name.localeCompare(b.name);});
       IMG_CACHE[pid]=imgs.map(function(f){
-        return {src:BASE_RAW+f.path, thumb:thumbMap[f.name]||BASE_RAW+f.path, cap:toTitle(f.name), tags:extractTags(f.name)};
+        return {src:safeUrl(f.path), thumb:thumbMap[f.name]||safeUrl(f.path), cap:toTitle(f.name), tags:extractTags(f.name)};
       });
       var indPg=document.getElementById('pg-'+pid);
       if(indPg&&!LOADED[pid]){ LOADED[pid]=true; var ld=indPg.querySelector('.loading'); if(ld)ld.remove(); renderIndividualGrid(indPg,pid); }
@@ -949,21 +949,30 @@ function buildShowAllGrid(pg){
   });
 }
 
-/* Extract tag numbers from a filename e.g. "001_sunset_#01_#03.jpg" → ["00","01","03"] */
+/* Extract tag numbers from filename using __ delimiter.
+   e.g. "001_sunset__01__03.jpg" → ["00","01","03"]
+   Every image implicitly has tag 00 (All).             */
 function extractTags(filename){
-  var tags = ['00']; /* every image implicitly has #00 */
-  var matches = filename.match(/#(\d{2})/g);
-  if(matches) matches.forEach(function(m){ var n=m.slice(1); if(n!=='00') tags.push(n); });
+  var tags = ['00'];
+  var matches = filename.match(/__(\d{2})/g);
+  if(matches) matches.forEach(function(m){ var n=m.slice(2); if(n!=='00') tags.push(n); });
   return tags;
 }
 
-/* Strip tags and number prefix from filename for display */
+/* Encode # as %23 in paths — kept as safety measure for
+   any filenames that might still contain # characters.  */
+function safeUrl(path){
+  return BASE_RAW + path.replace(/#/g,'%23');
+}
+
+/* Strip tags and number prefix from filename for display.
+   Handles __ tag delimiter: "002-IMG_7134__02.JPEG" → "IMG 7134" */
 function toTitle(name){
   return name
-    .replace(/\.[^.]+$/,'')        /* remove extension */
-    .replace(/#\d{2}/g,'')         /* remove #01 #02 etc */
-    .replace(/^\d+[_\-.\s]+/,'')   /* remove leading 001_ */
-    .replace(/[-_]/g,' ')
+    .replace(/\.[^.]+$/,'')        /* remove extension              */
+    .replace(/__\d{2}/g,'')        /* remove __01 __02 etc          */
+    .replace(/^\d+[-_.\s]+/,'')    /* remove leading 001_ or 002-   */
+    .replace(/[-_]+/g,' ')         /* dashes/underscores → spaces   */
     .trim();
 }
 
