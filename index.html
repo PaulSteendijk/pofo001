@@ -932,7 +932,11 @@ function buildShowAllGrid(pg){
 
   allPairs.forEach(function(pair){
     var pid = pageId(pair.fldr, pair.sub);
-    if(IMG_CACHE[pid]){ done(); return; }
+    /* Only use cache if it already has tags — otherwise refetch.
+       This handles the case where individual pages were cached
+       before the tags fix was applied.                          */
+    var cached = IMG_CACHE[pid];
+    if(cached && cached.length && cached[0].tags){ done(); return; }
     var folder = pair.fldr+'/'+pair.sub;
     Promise.all([
       fetch(BASE_API+folder).then(function(r){return r.ok?r.json():[];}).catch(function(){return [];}),
