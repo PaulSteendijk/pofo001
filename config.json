@@ -19,7 +19,7 @@
       }
     },
     "fldr02": {
-      "name": "Arendonk 25/26",
+      "name": "Arendonk 24/25",
       "desc": "Oil paintings",
       "subs": {
         "sub01": { "name": "still lifes", "desc": "Arendonk" },
@@ -28,7 +28,7 @@
       }
     },
     "fldr03": {
-      "name": "Arendonk 24/25",
+      "name": "Arendonk 25/26",
       "desc": "sketches, paintings and drawings",
       "subs": {
         "sub01": { "name": "gesture drawings",   "desc": "rapid sketches in diluted ink" },
@@ -37,7 +37,7 @@
       }
     },
     "fldr04": {
-      "name": "Arendonk 25/26",
+      "name": "f4",
       "desc": "Oil paintings",
       "subs": {
         "sub01": { "name": "still lifes", "desc": "Arendonk" },
@@ -46,7 +46,7 @@
       }
     },
     "fldr05": {
-      "name": "Arendonk 25/26",
+      "name": "f5",
       "desc": "Oil paintings",
       "subs": {
         "sub01": { "name": "still lifes", "desc": "Arendonk" },
@@ -55,7 +55,7 @@
       }
     },
     "fldr06": {
-      "name": "Arendonk 25/26",
+      "name": "f6",
       "desc": "Oil paintings",
       "subs": {
         "sub01": { "name": "still lifes", "desc": "Arendonk" },
@@ -64,7 +64,7 @@
       }
     },
      "fldr07": {
-      "name": "Arendonk 25/26",
+      "name": "f7",
       "desc": "Oil paintings",
       "subs": {
         "sub01": { "name": "still lifes", "desc": "Arendonk" },
