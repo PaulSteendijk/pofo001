@@ -10,8 +10,12 @@
       "desc": "Selected works",
       "subs": {
         "sub01": { "name": "Drawings", "desc": "Pencil, ink" },
-        "sub02": { "name": "Watercolors", "desc": "Watercolors and ink" },
-        "sub03": { "name": "Oils/Acrylics", "desc": "Oil and acrylic paintings" }
+        "sub02": { "name": "Urban sketches", "desc": "Watercolor and ink" },
+        "sub03": { "name": "Watercolors", "desc": "Watercolors and ink" },
+        "sub04": { "name": "Still lifes", "desc": "various" },
+        "sub05": { "name": "Portraits", "desc": "various" },
+        "sub06": { "name": "Landscapes", "desc": "various" },
+        "sub07": { "name": "Others", "desc": "various" }
       }
     },
     "fldr02": {
