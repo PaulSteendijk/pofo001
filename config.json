@@ -6,16 +6,25 @@
   "email":        "paulsteendijkportfolio@gmail.com",
   "menu": {
     "fldr01": {
-      "name": "Sketches",
-      "desc": "Sketches and fast drawings",
+      "name": "Selected",
+      "desc": "Selected works",
       "subs": {
-        "sub01": { "name": "Gesture drawings", "desc": "Arendonk 2024-2025" },
-        "sub02": { "name": "2023", "desc": "Works completed in 2023" },
-        "sub03": { "name": "2022", "desc": "Works completed in 2022" }
+        "sub01": { "name": "Drawings", "desc": "Pencil, ink" },
+        "sub02": { "name": "Watercolors", "desc": "Watercolors and ink" },
+        "sub03": { "name": "Oils/Acrylics", "desc": "Oil and acrylic paintings" }
       }
     },
     "fldr02": {
-      "name": "Arendonk 2004-2025",
+      "name": "Arendonk 25/26",
+      "desc": "Oil paintings",
+      "subs": {
+        "sub01": { "name": "still lifes", "desc": "Arendonk" },
+        "sub02": { "name": "portraits",  "desc": "Arendonk mainly" },
+        "sub03": { "name": "plein air",  "desc": "Arendonk mainly" }
+      }
+    },
+    "fldr03": {
+      "name": "Arendonk 24/25",
       "desc": "sketches, paintings and drawings",
       "subs": {
         "sub01": { "name": "gesture drawings",   "desc": "rapid sketches in diluted ink" },
@@ -23,14 +32,23 @@
         "sub03": { "name": "portraits",      "desc": "misc. portraits" }
       }
     },
-    "fldr03": {
-      "name": "Arendonk 2025-2026",
+    "fldr04": {
+      "name": "Arendonk 25/26",
       "desc": "Oil paintings",
       "subs": {
         "sub01": { "name": "still lifes", "desc": "Arendonk" },
         "sub02": { "name": "portraits",  "desc": "Arendonk mainly" },
         "sub03": { "name": "plein air",  "desc": "Arendonk mainly" }
       }
-    }
+    },
+    "fldr05": {
+      "name": "Arendonk 25/26",
+      "desc": "Oil paintings",
+      "subs": {
+        "sub01": { "name": "still lifes", "desc": "Arendonk" },
+        "sub02": { "name": "portraits",  "desc": "Arendonk mainly" },
+        "sub03": { "name": "plein air",  "desc": "Arendonk mainly" }
+      }
+
   }
 }
