@@ -53,7 +53,24 @@
         "sub02": { "name": "portraits",  "desc": "Arendonk mainly" },
         "sub03": { "name": "plein air",  "desc": "Arendonk mainly" }
       }
-
+    },
+    "fldr06": {
+      "name": "Arendonk 25/26",
+      "desc": "Oil paintings",
+      "subs": {
+        "sub01": { "name": "still lifes", "desc": "Arendonk" },
+        "sub02": { "name": "portraits",  "desc": "Arendonk mainly" },
+        "sub03": { "name": "plein air",  "desc": "Arendonk mainly" }
+      }
+    },
+     "fldr07": {
+      "name": "Arendonk 25/26",
+      "desc": "Oil paintings",
+      "subs": {
+        "sub01": { "name": "still lifes", "desc": "Arendonk" },
+        "sub02": { "name": "portraits",  "desc": "Arendonk mainly" },
+        "sub03": { "name": "plein air",  "desc": "Arendonk mainly" }
+      }
     }
  }
 }
