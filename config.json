@@ -9,7 +9,7 @@
       "name": "Selected",
       "desc": "Selected works",
       "subs": {
-        "sub01": { "name": "Drawings", "desc": "Pencil, ink" },
+        "sub01": { "name": "Rapid drawings", "desc": "Pencil, ink" },
         "sub02": { "name": "Urban sketches", "desc": "Watercolor and ink" },
         "sub03": { "name": "Watercolors", "desc": "Watercolors and ink" },
         "sub04": { "name": "Still lifes", "desc": "various" },
