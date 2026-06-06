@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio File Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f5f0;--ink:#1a1a18;--muted:#8a8880;
+  --accent:#c8a96e;--white:#fff;--border:rgba(26,26,24,.13);
+  --red:#c0392b;--cols:4;
+}
+body{font-family:'Jost',sans-serif;font-weight:300;background:var(--bg);color:var(--ink);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+/* ── Top bar ── */
+.topbar{
+  display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;
+  padding:.65rem 1.25rem;
+  background:var(--white);border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.app-title{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.3rem;color:var(--accent);flex-shrink:0}
+.sep{width:1px;height:18px;background:var(--border);flex-shrink:0}
+.btn{
+  padding:.28rem .7rem;border-radius:3px;border:1px solid var(--border);
+  background:none;color:var(--muted);font-family:'Jost',sans-serif;
+  font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;
+  cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;
+}
+.btn:hover{background:var(--ink);color:var(--white);border-color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--ink);border-color:var(--ink)}
+.btn.danger{color:var(--red);border-color:var(--red)}
+.btn.danger:hover{background:var(--red);color:#fff}
+.btn:disabled{opacity:.35;pointer-events:none}
+.tags-status{font-size:.7rem;color:var(--muted);flex-shrink:0}
+.spacer{flex:1}
+.col-picker{display:flex;align-items:center;gap:.28rem;flex-shrink:0}
+.col-label{font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.col-btn{
+  width:22px;height:22px;border-radius:3px;border:1px solid var(--border);
+  background:none;color:var(--muted);font-size:.67rem;font-family:'Jost',sans-serif;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.col-btn:hover{background:var(--ink);color:#fff}
+.col-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* ── Two panels ── */
+.panels-area{
+  display:grid;grid-template-columns:1fr 1fr;
+  overflow:hidden;
+  border-bottom:1px solid var(--border);
+  /* height set by JS resizer; default ~60% of viewport */
+}
+.panel{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border)}
+.panel:last-child{border-right:none}
+.panel-hdr{
+  display:flex;align-items:center;gap:.6rem;
+  padding:.5rem 1rem;background:var(--white);
+  border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.panel-name{font-size:.75rem;color:var(--muted);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.panel-name.loaded{color:var(--ink);font-weight:400}
+.panel-count{font-size:.65rem;color:var(--muted);flex-shrink:0}
+.panel-label{
+  flex:1;min-width:0;
+  padding:.2rem .45rem;border:1px solid transparent;border-radius:3px;
+  font-family:'Jost',sans-serif;font-size:.7rem;font-weight:300;color:var(--muted);
+  background:transparent;
+}
+.panel-label:hover{border-color:var(--border)}
+.panel-label:focus{outline:none;border-color:var(--accent);background:var(--white);color:var(--ink)}
+.panel-label::placeholder{color:rgba(138,136,128,.5)}
+.panel-grid{
+  flex:1;overflow-y:auto;
+  display:grid;grid-template-columns:repeat(var(--cols),1fr);
+  gap:5px;padding:.75rem 1rem;
+  align-content:start;
+  transition:background .15s;
+}
+.panel-grid.drag-over{background:rgba(200,169,110,.08);outline:2px dashed var(--accent);outline-offset:-4px}
+.empty-hint{grid-column:1/-1;font-size:.75rem;color:var(--muted);font-style:italic;padding:.5rem 0}
+
+/* ── Thumbnails ── */
+.thumb{
+  cursor:pointer;
+  border:2px solid transparent;border-radius:3px;
+  background:var(--white);
+  transition:border-color .12s,opacity .15s;
+  position:relative;overflow:hidden;
+  user-select:none;-webkit-user-select:none;
+}
+.thumb:hover{border-color:var(--border);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.thumb.selected{border-color:var(--accent)!important}
+.thumb.dragging{opacity:.3}
+.thumb.drop-before::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--accent);z-index:2;
+}
+.thumb.drop-after::after{
+  content:'';position:absolute;right:0;top:0;bottom:0;width:3px;
+  background:var(--accent);z-index:2;
+}
+.thumb-img{aspect-ratio:1;overflow:hidden;background:#e8e6e0}
+.thumb-img img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.thumb-foot{padding:3px 4px 5px;background:var(--white)}
+.thumb-num{font-size:.58rem;color:var(--muted);line-height:1.2}
+.thumb-desc{font-size:.63rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
+.thumb-desc.pending{color:var(--accent);font-style:italic}
+.thumb-taglist{font-size:.57rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── Bottom area: edit + changes ── */
+.bottom-area{
+  display:flex;flex:1;min-height:0;overflow:hidden;
+  border-top:1px solid var(--border);
+  background:var(--white);
+}
+
+/* Edit panel */
+#edit-panel{
+  display:none;flex:1;gap:1rem;padding:.75rem 1.25rem;
+  border-right:1px solid var(--border);overflow-y:auto;
+}
+#edit-panel.show{display:flex;flex-wrap:wrap;align-content:flex-start;}
+.edit-thumb{
+  width:100px;height:100px;flex-shrink:0;
+  overflow:hidden;background:#e8e6e0;border:1px solid var(--border);border-radius:3px;
+}
+.edit-thumb img{width:100%;height:100%;object-fit:contain;display:block}
+.edit-fields{flex:1;min-width:0;display:flex;flex-direction:column;gap:.5rem;}
+.field-label{font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.edit-input{
+  width:100%;padding:.3rem .55rem;border:1px solid var(--border);border-radius:3px;
+  font-family:'Jost',sans-serif;font-size:.8rem;font-weight:300;
+  background:var(--bg);color:var(--ink);
+}
+.edit-input:focus{outline:none;border-color:var(--accent)}
+.tag-pills-wrap{display:flex;flex-wrap:wrap;gap:.25rem;}
+.tag-pill{
+  padding:0 .5rem;height:20px;border-radius:10px;
+  border:1px solid var(--border);background:none;
+  color:var(--muted);font-size:.62rem;font-family:'Jost',sans-serif;
+  cursor:pointer;display:flex;align-items:center;
+  transition:all .12s;white-space:nowrap;
+}
+.tag-pill:hover{border-color:var(--ink);color:var(--ink)}
+.tag-pill.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.fname-preview{
+  font-size:.67rem;font-family:monospace;color:var(--muted);
+  padding:.25rem .5rem;background:var(--bg);border:1px solid var(--border);
+  border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.fname-preview.pending{color:var(--accent)}
+
+/* Changes panel */
+#changes-panel{
+  width:340px;flex-shrink:0;
+  display:flex;flex-direction:column;padding:.75rem 1.25rem;gap:.5rem;
+}
+.changes-title{font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.changes-list{flex:1;overflow-y:auto;font-size:.67rem;line-height:1.8}
+.ch-item{display:flex;gap:.4rem;align-items:baseline}
+.ch-old{text-decoration:line-through;color:var(--red);opacity:.75;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}
+.ch-arr{color:var(--muted);flex-shrink:0}
+.ch-new{color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.no-ch{font-size:.72rem;color:var(--muted);font-style:italic}
+.changes-btns{display:flex;gap:.4rem}
+
+/* ── Resizer ── */
+#resizer{
+  height:5px;flex-shrink:0;
+  background:var(--border);
+  cursor:row-resize;
+  transition:background .15s;
+}
+#resizer:hover,#resizer.dragging{background:var(--accent)}
+  display:none;position:fixed;inset:0;
+  background:rgba(247,245,240,.93);z-index:999;
+  flex-direction:column;align-items:center;justify-content:center;gap:.75rem;
+}
+#progress.show{display:flex}
+#prog-text{font-size:.85rem;color:var(--ink)}
+#prog-bar-bg{width:260px;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+#prog-bar{height:100%;background:var(--accent);width:0;transition:width .18s}
+
+/* No support */
+#no-support{
+  display:none;padding:3rem;text-align:center;
+  font-size:.9rem;color:var(--muted);line-height:2;
+}
+</style>
+</head>
+<body>
+
+<div id="no-support">
+  <strong style="color:var(--ink)">Chrome or Edge required</strong><br>
+  This tool uses the File System Access API which is not available in Firefox or Safari.<br>
+  Please open <code>manager.html</code> in Chrome or Edge.
+</div>
+
+<div id="app" style="display:none;flex-direction:column;height:100vh">
+
+<!-- Top bar -->
+<div class="topbar">
+  <span class="app-title">Portfolio Manager</span>
+  <div class="sep"></div>
+  <button class="btn" onclick="loadTagsJson()">Load tags.json</button>
+  <span class="tags-status" id="tags-status">No tags loaded</span>
+  <div class="spacer"></div>
+  <div class="col-picker">
+    <span class="col-label">Cols</span>
+    <button class="col-btn" onclick="setCols(3)">3</button>
+    <button class="col-btn active" onclick="setCols(4)">4</button>
+    <button class="col-btn" onclick="setCols(5)">5</button>
+    <button class="col-btn" onclick="setCols(6)">6</button>
+  </div>
+</div>
+
+<!-- Two panels -->
+<div class="panels-area">
+  <div class="panel" id="panel-A">
+    <div class="panel-hdr">
+      <button class="btn" onclick="openFolder('A')">Open folder</button>
+      <span class="panel-name" id="pname-A">No folder open</span>
+      <input class="panel-label" id="plabel-A" type="text" placeholder="Note path here…" title="Browser cannot access full path — type it here for reference">
+      <span class="panel-count" id="pcount-A"></span>
+    </div>
+    <div class="panel-grid" id="grid-A"
+         ondragover="onDragOver(event,'A')"
+         ondrop="onDrop(event,'A')"
+         ondragleave="onDragLeave(event,'A')">
+      <div class="empty-hint">Open a folder to start</div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-B">
+    <div class="panel-hdr">
+      <button class="btn" onclick="openFolder('B')">Open folder</button>
+      <span class="panel-name" id="pname-B">No folder open</span>
+      <input class="panel-label" id="plabel-B" type="text" placeholder="Note path here…" title="Browser cannot access full path — type it here for reference">
+      <span class="panel-count" id="pcount-B"></span>
+    </div>
+    <div class="panel-grid" id="grid-B"
+         ondragover="onDragOver(event,'B')"
+         ondrop="onDrop(event,'B')"
+         ondragleave="onDragLeave(event,'B')">
+      <div class="empty-hint">Open a folder to start</div>
+    </div>
+  </div>
+</div>
+
+<!-- Drag to resize panels vs edit area -->
+<div id="resizer"></div>
+
+<!-- Bottom: edit + changes -->
+<div class="bottom-area">
+
+  <!-- Edit panel (hidden until image selected) -->
+  <div id="edit-panel">
+    <div class="edit-thumb"><img id="edit-img" src="" alt=""></div>
+    <div class="edit-fields">
+      <div>
+        <div class="field-label">Description</div>
+        <input class="edit-input" id="edit-desc" type="text" oninput="onDescInput()" placeholder="Image description">
+      </div>
+      <div>
+        <div class="field-label">Tags</div>
+        <div class="tag-pills-wrap" id="tag-pills"></div>
+      </div>
+      <div>
+        <div class="field-label">New filename</div>
+        <div class="fname-preview" id="fname-preview">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Changes panel -->
+  <div id="changes-panel">
+    <div class="changes-title">Pending changes</div>
+    <div class="changes-list" id="changes-list">
+      <div class="no-ch">No changes yet</div>
+    </div>
+    <div class="changes-btns">
+      <button class="btn primary" id="btn-apply" onclick="applyAll()" disabled>Apply all</button>
+      <button class="btn danger"  id="btn-discard" onclick="discardAll()" disabled>Discard</button>
+    </div>
+  </div>
+
+</div>
+</div><!-- #app -->
+
+<!-- Progress overlay -->
+<div id="progress">
+  <div id="prog-text">Applying changes…</div>
+  <div id="prog-bar-bg"><div id="prog-bar"></div></div>
+</div>
+
+<script>
+'use strict';
+
+/* ── Browser check ── */
+if (!window.showDirectoryPicker) {
+  document.getElementById('no-support').style.display = 'block';
+} else {
+  const app = document.getElementById('app');
+  app.style.display = 'flex';
+  app.style.flexDirection = 'column';
+}
+
+const IMG_EXT = /\.(jpg|jpeg|png|gif|webp|avif)$/i;
+
+/* ── State ── */
+let TAGS_CFG = {};
+
+const panels = {
+  A: { dirHandle: null, thumbsHandle: null, files: [] },
+  B: { dirHandle: null, thumbsHandle: null, files: [] }
+};
+
+let selected = null;  /* { panelId, idx } */
+let dragSrc  = null;  /* { panelId, idx } */
+let dropPos  = null;  /* { panelId, idx } — insert before this index */
+
+/* ── Column picker ── */
+function setCols(n) {
+  document.documentElement.style.setProperty('--cols', n);
+  document.querySelectorAll('.col-btn').forEach(b =>
+    b.classList.toggle('active', +b.textContent === n));
+}
+
+/* ── Load tags.json ── */
+async function loadTagsJson() {
+  try {
+    const [fh] = await window.showOpenFilePicker({
+      types: [{ description: 'JSON file', accept: { 'application/json': ['.json'] } }]
+    });
+    const file = await fh.getFile();
+    TAGS_CFG = JSON.parse(await file.text());
+    const n = Object.keys(TAGS_CFG).filter(k => k !== '00').length;
+    document.getElementById('tags-status').textContent = n + ' tags loaded';
+    renderGrid('A');
+    renderGrid('B');
+    if (selected) renderEditPanel();
+  } catch (e) {
+    if (e.name !== 'AbortError') alert('Could not load tags.json:\n' + e.message);
+  }
+}
+
+/* ── Open folder ── */
+async function openFolder(pid) {
+  try {
+    const dh = await window.showDirectoryPicker({ mode: 'readwrite' });
+    panels[pid].dirHandle = dh;
+    panels[pid].thumbsHandle = null;
+    try { panels[pid].thumbsHandle = await dh.getDirectoryHandle('thumbs'); } catch (_) {}
+    document.getElementById('pname-' + pid).textContent = dh.name;
+    document.getElementById('pname-' + pid).classList.add('loaded');
+    /* Pre-fill the editable label with the folder name as a starting point */
+    const labelEl = document.getElementById('plabel-' + pid);
+    if (!labelEl.value) labelEl.value = dh.name;
+    await loadFiles(pid);
+  } catch (e) {
+    if (e.name !== 'AbortError') alert('Could not open folder:\n' + e.message);
+  }
+}
+
+/* ── Load files ── */
+async function loadFiles(pid) {
+  const p = panels[pid];
+  /* Revoke old blob URLs */
+  p.files.forEach(f => URL.revokeObjectURL(f.url));
+  p.files = [];
+
+  for await (const [name, handle] of p.dirHandle.entries()) {
+    if (handle.kind !== 'file' || !IMG_EXT.test(name)) continue;
+    const file = await handle.getFile();
+    const url  = URL.createObjectURL(file);
+    const { desc, tags, ext } = parseFilename(name);
+    p.files.push({ handle, name, url, desc, tags, ext, srcPid: pid });
+  }
+
+  /* Sort by numeric prefix then filename */
+  p.files.sort((a, b) => {
+    const na = parseInt(a.name.match(/^(\d+)/)?.[1] ?? '99999');
+    const nb = parseInt(b.name.match(/^(\d+)/)?.[1] ?? '99999');
+    return na !== nb ? na - nb : a.name.localeCompare(b.name);
+  });
+
+  renderGrid(pid);
+  recalcChanges();
+}
+
+/* ── Parse filename ── */
+function parseFilename(name) {
+  const ext  = name.match(/\.[^.]+$/)?.[0] ?? '';
+  let base   = name.replace(/\.[^.]+$/, '');
+  base       = base.replace(/^\d+[-_.\s]+/, '');          /* strip prefix  */
+  const tags = (base.match(/__(\d{2})/g) ?? []).map(m => m.slice(2));
+  base       = base.replace(/__\d{2}/g, '').replace(/[-_]+$/, '').trim();
+  return { desc: base, tags, ext };
+}
+
+/* ── Build filename ── */
+function buildFilename(order, desc, tags, ext) {
+  const pre  = String(order).padStart(3, '0');
+  const d    = (desc || 'untitled').replace(/\s+/g, '_').replace(/[^\w\-.]/g, '_');
+  const t    = tags.map(n => '__' + n).join('');
+  return pre + '_' + d + t + ext;
+}
+
+/* ── Compute target name for file at position idx in panel pid ── */
+function computeName(pid, idx) {
+  const f = panels[pid].files[idx];
+  return buildFilename(idx + 1, f.desc, f.tags, f.ext);
+}
+
+/* ── Render grid ── */
+function renderGrid(pid) {
+  const grid  = document.getElementById('grid-' + pid);
+  const files = panels[pid].files;
+  grid.innerHTML = '';
+
+  document.getElementById('pcount-' + pid).textContent =
+    files.length ? files.length + ' image' + (files.length > 1 ? 's' : '') : '';
+
+  if (!files.length) {
+    const hint = document.createElement('div');
+    hint.className = 'empty-hint';
+    hint.textContent = panels[pid].dirHandle ? 'No images in this folder' : 'Open a folder to start';
+    grid.appendChild(hint);
+    return;
+  }
+
+  files.forEach((f, idx) => {
+    const el = document.createElement('div');
+    el.className = 'thumb';
+    el.dataset.idx = idx;
+    el.draggable = true;
+    if (selected?.panelId === pid && selected.idx === idx) el.classList.add('selected');
+
+    el.addEventListener('dragstart', e => onDragStart(e, pid, idx));
+    el.addEventListener('dragend',   onDragEnd);
+    el.addEventListener('click',     () => selectFile(pid, idx));
+
+    const wrap = document.createElement('div'); wrap.className = 'thumb-img';
+    const img  = document.createElement('img');
+    img.src = f.url; img.alt = f.desc; img.loading = 'lazy';
+    wrap.appendChild(img);
+
+    const foot  = document.createElement('div'); foot.className = 'thumb-foot';
+    const num   = document.createElement('div'); num.className = 'thumb-num';
+    num.textContent = String(idx + 1).padStart(3, '0');
+
+    const newName = computeName(pid, idx);
+    const pending = newName !== f.name || pid !== f.srcPid;
+
+    const dsc = document.createElement('div');
+    dsc.className = 'thumb-desc' + (pending ? ' pending' : '');
+    dsc.textContent = f.desc.replace(/_/g, ' ') || '—';
+    dsc.title = newName;
+
+    foot.appendChild(num); foot.appendChild(dsc);
+
+    /* Always render tag line — empty if no tags — keeps all cells same height */
+    const tl = document.createElement('div'); tl.className = 'thumb-taglist';
+    tl.textContent = f.tags.length
+      ? f.tags.map(n => TAGS_CFG[n] || '#' + n).join(', ')
+      : '\u00a0'; /* non-breaking space keeps the line height */
+    foot.appendChild(tl);
+
+    el.appendChild(wrap); el.appendChild(foot);
+    grid.appendChild(el);
+  });
+}
+
+/* ── Select image ── */
+function selectFile(pid, idx) {
+  selected = { panelId: pid, idx };
+  document.querySelectorAll('.thumb.selected').forEach(el => el.classList.remove('selected'));
+  const items = document.getElementById('grid-' + pid).querySelectorAll('.thumb');
+  if (items[idx]) items[idx].classList.add('selected');
+  renderEditPanel();
+}
+
+/* ── Edit panel ── */
+function renderEditPanel() {
+  const panel = document.getElementById('edit-panel');
+  if (!selected) { panel.classList.remove('show'); return; }
+  panel.classList.add('show');
+
+  const f = panels[selected.panelId].files[selected.idx];
+  document.getElementById('edit-img').src  = f.url;
+  document.getElementById('edit-desc').value = f.desc.replace(/_/g, ' ');
+
+  /* Tag pills */
+  const pillsEl = document.getElementById('tag-pills');
+  pillsEl.innerHTML = '';
+  const keys = Object.keys(TAGS_CFG).filter(k => k !== '00').sort((a, b) => +a - +b);
+
+  if (!keys.length) {
+    const hint = document.createElement('span');
+    hint.style.cssText = 'font-size:.68rem;color:var(--muted);font-style:italic';
+    hint.textContent = 'Load tags.json to enable tagging';
+    pillsEl.appendChild(hint);
+  } else {
+    keys.forEach(n => {
+      const pill = document.createElement('button');
+      pill.className = 'tag-pill' + (f.tags.includes(n) ? ' on' : '');
+      pill.textContent = TAGS_CFG[n] || '#' + n;
+      pill.onclick = () => toggleTag(n);
+      pillsEl.appendChild(pill);
+    });
+  }
+
+  updateFnamePreview();
+}
+
+function updateFnamePreview() {
+  if (!selected) return;
+  const f       = panels[selected.panelId].files[selected.idx];
+  const newName = computeName(selected.panelId, selected.idx);
+  const el      = document.getElementById('fname-preview');
+  el.textContent = newName;
+  el.classList.toggle('pending', newName !== f.name);
+}
+
+function onDescInput() {
+  if (!selected) return;
+  const f = panels[selected.panelId].files[selected.idx];
+  f.desc  = document.getElementById('edit-desc').value.trim().replace(/\s+/g, '_');
+  updateFnamePreview();
+  renderGrid(selected.panelId);
+  recalcChanges();
+}
+
+function toggleTag(n) {
+  if (!selected) return;
+  const f   = panels[selected.panelId].files[selected.idx];
+  const pos = f.tags.indexOf(n);
+  if (pos >= 0) f.tags.splice(pos, 1);
+  else { f.tags.push(n); f.tags.sort((a, b) => +a - +b); }
+  renderEditPanel();
+  renderGrid(selected.panelId);
+  recalcChanges();
+}
+
+/* ── Drag and drop ── */
+function onDragStart(e, pid, idx) {
+  dragSrc = { panelId: pid, idx };
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => {
+    const items = document.getElementById('grid-' + pid).querySelectorAll('.thumb');
+    if (items[idx]) items[idx].classList.add('dragging');
+  }, 0);
+}
+
+function onDragEnd() {
+  document.querySelectorAll('.thumb.dragging').forEach(el => el.classList.remove('dragging'));
+  clearDropUI();
+  dragSrc = null; dropPos = null;
+}
+
+function clearDropUI() {
+  document.querySelectorAll('.thumb.drop-before,.thumb.drop-after')
+    .forEach(el => { el.classList.remove('drop-before', 'drop-after'); });
+  document.querySelectorAll('.panel-grid.drag-over')
+    .forEach(el => el.classList.remove('drag-over'));
+}
+
+function onDragOver(e, pid) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  clearDropUI();
+
+  const grid  = document.getElementById('grid-' + pid);
+  grid.classList.add('drag-over');
+  const items = [...grid.querySelectorAll('.thumb')];
+  if (!items.length) { dropPos = { panelId: pid, idx: 0 }; return; }
+
+  /* elementFromPoint correctly handles all rows — find the thumb under cursor */
+  const elUnder    = document.elementFromPoint(e.clientX, e.clientY);
+  const thumbUnder = elUnder?.closest('.thumb');
+
+  if (thumbUnder && thumbUnder.closest('.panel-grid') === grid) {
+    /* Cursor is directly over a thumbnail */
+    const idx    = parseInt(thumbUnder.dataset.idx);
+    const r      = thumbUnder.getBoundingClientRect();
+    const before = e.clientX < r.left + r.width / 2;
+    dropPos      = { panelId: pid, idx: before ? idx : idx + 1 };
+    thumbUnder.classList.add(before ? 'drop-before' : 'drop-after');
+  } else {
+    /* Cursor is over empty grid space — find nearest thumb using 2D distance */
+    let nearest = items.length - 1, minDist = Infinity;
+    items.forEach((el, i) => {
+      const r    = el.getBoundingClientRect();
+      const dist = Math.hypot(e.clientX - (r.left + r.width / 2),
+                              e.clientY - (r.top  + r.height / 2));
+      if (dist < minDist) { minDist = dist; nearest = i; }
+    });
+    const r      = items[nearest].getBoundingClientRect();
+    const before = e.clientX < r.left + r.width / 2;
+    dropPos      = { panelId: pid, idx: before ? nearest : nearest + 1 };
+    items[nearest].classList.add(before ? 'drop-before' : 'drop-after');
+  }
+}
+
+function onDragLeave(e, pid) {
+  if (!document.getElementById('grid-' + pid).contains(e.relatedTarget)) {
+    clearDropUI(); dropPos = null;
+  }
+}
+
+function onDrop(e, pid) {
+  e.preventDefault();
+  clearDropUI();
+  if (!dragSrc || dropPos === null) return;
+
+  const sp = dragSrc.panelId, si = dragSrc.idx;
+  const dp = dropPos.panelId, di = dropPos.idx;
+  let landedPid, landedIdx;
+
+  if (sp === dp) {
+    /* Reorder within same panel */
+    const arr      = panels[sp].files;
+    const [item]   = arr.splice(si, 1);
+    const insertAt = di > si ? di - 1 : di;
+    arr.splice(insertAt, 0, item);
+    /* Adjust existing selection index */
+    if (selected?.panelId === sp) {
+      if      (selected.idx === si)                           selected.idx = insertAt;
+      else if (selected.idx > si && selected.idx <= insertAt) selected.idx--;
+      else if (selected.idx < si && selected.idx >= di)       selected.idx++;
+    }
+    landedPid = sp; landedIdx = insertAt;
+    renderGrid(sp);
+  } else {
+    /* Move between panels */
+    const [item] = panels[sp].files.splice(si, 1);
+    panels[dp].files.splice(di, 0, item);
+    landedPid = dp; landedIdx = Math.min(di, panels[dp].files.length - 1);
+    renderGrid(sp);
+    renderGrid(dp);
+  }
+
+  recalcChanges();
+  /* Always select the image that was just dropped */
+  selectFile(landedPid, landedIdx);
+  dragSrc = null; dropPos = null;
+}
+
+/* ── Pending changes ── */
+function recalcChanges() {
+  const changes = [];
+  ['A', 'B'].forEach(pid => {
+    panels[pid].files.forEach((f, idx) => {
+      const newName = computeName(pid, idx);
+      const moved   = f.srcPid !== pid;
+      if (newName !== f.name || moved) {
+        changes.push({ f, srcPid: f.srcPid, dstPid: pid, idx, newName });
+      }
+    });
+  });
+
+  const list = document.getElementById('changes-list');
+  list.innerHTML = '';
+
+  if (!changes.length) {
+    list.innerHTML = '<div class="no-ch">No pending changes</div>';
+    document.getElementById('btn-apply').disabled  = true;
+    document.getElementById('btn-discard').disabled = true;
+    return;
+  }
+
+  document.getElementById('btn-apply').disabled  = false;
+  document.getElementById('btn-discard').disabled = false;
+
+  changes.forEach(ch => {
+    const row = document.createElement('div'); row.className = 'ch-item';
+    const prefix = ch.srcPid !== ch.dstPid ? '[' + ch.srcPid + '→' + ch.dstPid + '] ' : '';
+    row.innerHTML =
+      '<span class="ch-old" title="' + ch.f.name + '">' + ch.f.name + '</span>' +
+      '<span class="ch-arr">→</span>' +
+      '<span class="ch-new" title="' + ch.newName + '">' + prefix + ch.newName + '</span>';
+    list.appendChild(row);
+  });
+}
+
+/* ── Apply all ── */
+async function applyAll() {
+  /* Build change list */
+  const changes = [];
+  ['A', 'B'].forEach(pid => {
+    panels[pid].files.forEach((f, idx) => {
+      const newName = computeName(pid, idx);
+      if (newName !== f.name || f.srcPid !== pid)
+        changes.push({ f, srcPid: f.srcPid, dstPid: pid, idx, newName });
+    });
+  });
+
+  const overlay = document.getElementById('progress');
+  const bar     = document.getElementById('prog-bar');
+  const txt     = document.getElementById('prog-text');
+  overlay.classList.add('show');
+
+  for (let i = 0; i < changes.length; i++) {
+    const ch = changes[i];
+    txt.textContent = (i + 1) + ' / ' + changes.length + '  ' + ch.f.name;
+    bar.style.width = (i / changes.length * 100) + '%';
+    try {
+      await doRenameOrMove(ch);
+    } catch (err) {
+      overlay.classList.remove('show');
+      alert('Error processing ' + ch.f.name + ':\n' + err.message);
+      /* Reload to get accurate state */
+      await loadFiles('A');
+      await loadFiles('B');
+      return;
+    }
+  }
+
+  bar.style.width = '100%';
+  txt.textContent = 'Done!';
+  await sleep(500);
+  overlay.classList.remove('show');
+
+  /* Reload panels from disk */
+  if (panels.A.dirHandle) await loadFiles('A');
+  if (panels.B.dirHandle) await loadFiles('B');
+
+  /* Restore selection if possible */
+  if (selected) {
+    const files = panels[selected.panelId].files;
+    if (selected.idx >= files.length) selected.idx = Math.max(0, files.length - 1);
+    if (files.length) selectFile(selected.panelId, selected.idx);
+  }
+}
+
+async function doRenameOrMove({ f, srcPid, dstPid, newName }) {
+  const srcDir   = panels[srcPid].dirHandle;
+  const dstDir   = panels[dstPid].dirHandle;
+  const srcThumbs = panels[srcPid].thumbsHandle;
+  const dstThumbs = panels[dstPid].thumbsHandle;
+
+  /* Copy main image to destination with new name */
+  const buf = await (await f.handle.getFile()).arrayBuffer();
+  const wh  = await dstDir.getFileHandle(newName, { create: true });
+  const wr  = await wh.createWritable();
+  await wr.write(buf); await wr.close();
+
+  /* Delete original */
+  await srcDir.removeEntry(f.name);
+
+  /* Handle matching thumbnail */
+  if (srcThumbs) {
+    try {
+      const th  = await srcThumbs.getFileHandle(f.name);
+      const tb  = await (await th.getFile()).arrayBuffer();
+      const dtd = dstThumbs ?? srcThumbs; /* write thumb to dst thumbs if available */
+      const twh = await dtd.getFileHandle(newName, { create: true });
+      const twr = await twh.createWritable();
+      await twr.write(tb); await twr.close();
+      await srcThumbs.removeEntry(f.name);
+    } catch (_) { /* no matching thumb — fine */ }
+  }
+}
+
+/* ── Discard all ── */
+async function discardAll() {
+  if (!confirm('Discard all pending changes and reload from disk?')) return;
+  selected = null;
+  document.getElementById('edit-panel').classList.remove('show');
+  if (panels.A.dirHandle) await loadFiles('A');
+  if (panels.B.dirHandle) await loadFiles('B');
+}
+
+/* ── Keyboard ── */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    selected = null;
+    document.querySelectorAll('.thumb.selected').forEach(el => el.classList.remove('selected'));
+    document.getElementById('edit-panel').classList.remove('show');
+  }
+});
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* ── Resizer ── */
+const resizerEl    = document.getElementById('resizer');
+const panelsEl     = document.querySelector('.panels-area');
+const topbarEl     = document.querySelector('.topbar');
+
+function initPanelsHeight() {
+  /* Default: panels take ~62% of space below topbar */
+  const available = window.innerHeight - topbarEl.offsetHeight - resizerEl.offsetHeight;
+  panelsEl.style.height = Math.round(available * 0.62) + 'px';
+}
+initPanelsHeight();
+window.addEventListener('resize', initPanelsHeight);
+
+let resizeDragging = false, resizeStartY = 0, resizeStartH = 0;
+
+resizerEl.addEventListener('mousedown', e => {
+  resizeDragging = true;
+  resizeStartY   = e.clientY;
+  resizeStartH   = panelsEl.offsetHeight;
+  resizerEl.classList.add('dragging');
+  document.body.style.cursor = 'row-resize';
+  document.body.style.userSelect = 'none';
+});
+
+document.addEventListener('mousemove', e => {
+  if (!resizeDragging) return;
+  const dy      = e.clientY - resizeStartY;
+  const minH    = 80;
+  const maxH    = window.innerHeight - topbarEl.offsetHeight - resizerEl.offsetHeight - 80;
+  const newH    = Math.min(Math.max(resizeStartH + dy, minH), maxH);
+  panelsEl.style.height = newH + 'px';
+});
+
+document.addEventListener('mouseup', () => {
+  if (!resizeDragging) return;
+  resizeDragging = false;
+  resizerEl.classList.remove('dragging');
+  document.body.style.cursor = '';
+  document.body.style.userSelect = '';
+});
+</script>
+</body>
+</html>
